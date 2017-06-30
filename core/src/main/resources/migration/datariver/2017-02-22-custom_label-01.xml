@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	           xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+  <changeSet author="enrico.calanchi" id="2017-02-22-custom_label-01" dbms="postgresql">
+       <preConditions onFail="MARK_RAN">
+	<not><tableExists tableName="study_subject_custom_label" /></not>
+	</preConditions> 
+    <comment>Added Custom Study Subject Label</comment>
+        <createTable tableName="study_subject_custom_label">
+            <column name="study_id" type="int">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="label_prefix" type="varchar(16)"/>
+            <column name="label_code_length" type="int"/>
+            <column name="label_suffix" type="varchar(16)"/>
+            <column name="study_label_counter" type="int"/>                        
+        </createTable>       
+        <addForeignKeyConstraint baseColumnNames="study_id"
+                                 baseTableName="study_subject_custom_label"
+                                 constraintName="fk_study_id"
+                                 referencedColumnNames="study_id"
+                                 referencedTableName="study"/>
+
+    </changeSet>
+	<changeSet author="enrico.calanchi" id="2017-02-22-custom_label-01-create_study_insert_function" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <dbms type="postgresql" />
+    </preConditions>
+     <sql splitStatements="false">
+        CREATE OR REPLACE FUNCTION study_insert_trigger() RETURNS "trigger" AS
+     		'
+     		BEGIN
+     		IF(TG_OP=''INSERT'') THEN
+     			IF (NEW.parent_study_id <![CDATA[>]]> 0) THEN
+
+     			ELSE 
+    				INSERT INTO study_subject_custom_label(study_id, label_code_length, label_suffix, study_label_counter)
+    				VALUES (NEW.study_id, 4, NEW."name", 0);
+    			END IF;
+    		END IF;
+    		RETURN NEW;
+    		END;
+    		'
+    		  LANGUAGE plpgsql;
+    </sql>
+    </changeSet>
+	<changeSet author="enrico.calanchi" id="2017-02-22-custom_label-01-create_study_insert_trigger" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <dbms type="postgresql" />
+    </preConditions>
+     <sql splitStatements="false">
+		CREATE TRIGGER study_insert_trigger
+		  AFTER INSERT
+		  ON study
+		  FOR EACH ROW
+		  EXECUTE PROCEDURE study_insert_trigger();
+    </sql>
+    </changeSet>
+</databaseChangeLog>
