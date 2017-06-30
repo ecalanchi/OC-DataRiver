@@ -268,20 +268,22 @@
 	<!-- @pgawade 16-NOV-2010 unit tests through maven -->
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.liquibase</groupId>
-                <artifactId>liquibase-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.zeroturnaround</groupId>
-                <artifactId>jrebel-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
+	    <pluginManagement>
+	        <plugins>
+	            <plugin>
+	                <groupId>org.liquibase</groupId>
+	                <artifactId>liquibase-plugin</artifactId>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.zeroturnaround</groupId>
+	                <artifactId>jrebel-maven-plugin</artifactId>
+	            </plugin>
+	            <plugin>
+	                <groupId>org.codehaus.mojo</groupId>
+	                <artifactId>buildnumber-maven-plugin</artifactId>
+	            </plugin>
+	        </plugins>
+	    </pluginManagement>
     </build>
 
 </project>

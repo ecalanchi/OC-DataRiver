@@ -262,28 +262,30 @@
 		</dependency>
 	</dependencies>
     <build>
-        <plugins>
+	   <pluginManagement> 
+	       <plugins>
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
 			</plugin>
-            <plugin>
-                <groupId>org.codehaus.cargo</groupId>
-                <artifactId>cargo-maven2-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.zeroturnaround</groupId>
-                <artifactId>jrebel-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
+	           <plugin>
+	               <groupId>org.codehaus.cargo</groupId>
+	               <artifactId>cargo-maven2-plugin</artifactId>
+	           </plugin>
+	           <plugin>
+	               <groupId>org.apache.maven.plugins</groupId>
+	               <artifactId>maven-assembly-plugin</artifactId>
+	           </plugin>
+	           <plugin>
+	               <groupId>org.zeroturnaround</groupId>
+	               <artifactId>jrebel-maven-plugin</artifactId>
+	           </plugin>
+	           <plugin>
+	               <groupId>org.codehaus.mojo</groupId>
+	               <artifactId>buildnumber-maven-plugin</artifactId>
+	           </plugin>
+	       </plugins>
+	   </pluginManagement> 
     </build>
 
     <properties>
