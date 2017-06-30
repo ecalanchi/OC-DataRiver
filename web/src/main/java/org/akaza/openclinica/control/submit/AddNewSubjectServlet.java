@@ -727,16 +727,44 @@ public class AddNewSubjectServlet extends SecureController {
 
                 studySubject.setOwner(ub);
 
+                //+DR added by DataRiver (EC) 22/02/2017
+                //customize study_subject_id if study_id is in study_subject_custom_label table
                 // Shaoyu Su: prevent same label ("Study Subject ID")
-                if (fp.getString(INPUT_LABEL).equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
-                    synchronized (simpleLockObj) {
-                        int nextLabel = ssd.findTheGreatestLabel() + 1;
-                        studySubject.setLabel(nextLabel + "");
-                        studySubject = ssd.createWithoutGroup(studySubject);
-                        if (showExistingRecord && !existingSubShown) {
-                            fp.addPresetValue(INPUT_LABEL, label);
+//                if (fp.getString(INPUT_LABEL).equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
+//                    synchronized (simpleLockObj) {
+//                        int nextLabel = ssd.findTheGreatestLabel() + 1;
+//                        studySubject.setLabel(nextLabel + "");
+//                        studySubject = ssd.createWithoutGroup(studySubject);
+//                        if (showExistingRecord && !existingSubShown) {
+//                            fp.addPresetValue(INPUT_LABEL, label);
+//                        }
+//                    }
+                    if (fp.getString(INPUT_LABEL).equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
+                        synchronized (simpleLockObj) {
+                        	if (getStudySubjectCustomLabelDao().getByStudyId(parentStudyId) != null){
+                        		//DataRiver custom label
+    	                    	String nextCode = "" + (getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getStudyLabelCounter() + 1);
+    	                    	//add as many zeros as needed to achieve the required fixed length (max 6 digits)
+    	                    	//set label_code_length to 0 in study_subject_custom_label table if you don't want a fixed length code
+    	                    	while (nextCode.length() < getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getLabelCodeLength() && nextCode.length() <= 6){
+    	                    		nextCode = "0" + nextCode;
+    	                    	} 
+    	                    	String prefix = getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getLabelPrefix() == null ? "" : parseStudySubjectlabel(getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getLabelPrefix());
+    	                    	String suffix = getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getLabelSuffix() == null ? "" : parseStudySubjectlabel(getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getLabelSuffix());
+    	                    	String nextLabel = trimCustomLabel(prefix, nextCode, suffix);
+    	                        studySubject.setLabel(nextLabel);
+                        	} else {
+                        		//OpenClinica default (integer) label
+                        		int nextLabel = ssd.findTheGreatestLabel() + 1;
+                              	studySubject.setLabel(nextLabel + "");
+                        	}
+                            studySubject = ssd.createWithoutGroup(studySubject);
+                            getStudySubjectCustomLabelDao().incrementStudyLabelCounter(parentStudyId);
+                            if (showExistingRecord && !existingSubShown) {
+                                fp.addPresetValue(INPUT_LABEL, label);
+                            }
                         }
-                    }
+                    //+DR end added by DataRiver (EC) 22/02/2017                    
                 } else {
                     studySubject = ssd.createWithoutGroup(studySubject);
                 }
@@ -1062,4 +1090,44 @@ public class AddNewSubjectServlet extends SecureController {
         }
 
     }
+    
+    //+DR  added by DataRiver (EC) 22/02/2017
+    /**
+     * Replace label with current study parameters
+     * @param rawLabel
+     * @return label with updated parameters' value
+     */
+    public String parseStudySubjectlabel(String rawLabel){
+    	String s = rawLabel;
+    	//parse {siteCode}
+    	s = s.replaceAll("\\{siteCode\\}", currentStudy.getOid().split("_")[1]);
+    	//parse {siteName}
+    	s = s.replaceAll("\\{siteName\\}", currentStudy.getAbbreviatedName());
+    	
+    	s = s. replaceAll("\\s+","");
+    	//prefix and suffix length must be limited to avoid that prefix is completely lost when trimCustomLabel is called
+    	if (s.length() > 16) s = s.substring(0, 16);
+    	
+    	return s.toUpperCase();
+    }
+    
+    /**
+     * Merge parameters to create the new label and truncate prefix if label is longer than database field size of 30 chars 
+     * @param prefix
+     * @param code
+     * @param suffix
+     * @return nextLabel
+     */
+    public String trimCustomLabel(String prefix, String code, String suffix){
+    	String nextLabel = "";
+    	int labelLength = prefix.length() + code.length() + suffix.length();
+    	if (labelLength > 30) {
+    		nextLabel = prefix.substring(0, prefix.length() - (labelLength - 30)) + code + suffix;
+    	} else {
+    		nextLabel = prefix + code + suffix;
+    	}
+    	
+    	return nextLabel;
+    }
+  //+DR end added by DataRiver (EC) 22/02/2017
 }

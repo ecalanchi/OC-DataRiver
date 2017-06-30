@@ -54,6 +54,10 @@
                 <value>org.akaza.openclinica.domain.crfdata.SCDItemMetadataBean</value>
                 <value>org.akaza.openclinica.domain.usageStats.LogUsageStatsBean</value>
                 <value>org.akaza.openclinica.domain.OpenClinicaVersionBean</value>
+                <!-- //+DR added by DataRiver (EC) 22/02/2017 -->
+				<value>org.akaza.openclinica.domain.datariver.StudySubjectCustomLabelBean</value>
+				<!-- //+DR end added by DataRiver (EC) 22/02/2017 -->
+                
  
                 <!-- The following beans are coded for data maping, currently they are partially working, to resume the work uncomment it -->
                 <value>org.akaza.openclinica.domain.datamap.Study</value> 
@@ -186,6 +190,13 @@
 
   <bean id="measurementUnitDao" class="org.akaza.openclinica.dao.hibernate.MeasurementUnitDao" parent="abstractDomainDao" autowire="byName" />
   <bean id="scdItemMetadataDao" class="org.akaza.openclinica.dao.hibernate.SCDItemMetadataDao" parent="abstractDomainDao" autowire="byName" />
+
+	<!-- //+DR added by DataRiver (EC) 22/02/2017 -->  
+	<bean id="studySubjectCustomLabelDao" class="org.akaza.openclinica.dao.hibernate.datariver.StudySubjectCustomLabelDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<!-- //+DR end added by DataRiver (EC) 22/02/2017-->	
+
   
   <bean id="usageStatsServiceDAO" class="org.akaza.openclinica.dao.hibernate.UsageStatsServiceDAO" parent="abstractDomainDao" autowire="byName" />
   <bean id="openClinicaVersionDAO" class="org.akaza.openclinica.dao.hibernate.OpenClinicaVersionDAO" parent="abstractDomainDao" autowire="byName" />

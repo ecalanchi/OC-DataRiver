@@ -622,7 +622,11 @@ public class StudySubjectDAO<K extends String,V extends ArrayList> extends Audit
 
         String oid;
         try {
-            oid = ssb.getOid() != null ? ssb.getOid() : ssb.getOidGenerator().generateOid(ssb.getLabel());
+    		//+DR modified by DataRiver (EC) 22/02/2017
+        	//create oc_oid from study_subject_id [PK] instead of label
+        	//oid = ssb.getOid() != null ? ssb.getOid() : ssb.getOidGenerator().generateOid(ssb.getLabel());
+            oid = ssb.getOid() != null ? ssb.getOid() : ssb.getOidGenerator().generateOid("" + ssb.getSubjectId());
+    		//+DR end modified by DataRiver (EC) 22/02/2017
             return oid;
         } catch (Exception e) {
             throw new RuntimeException("CANNOT GENERATE OID");

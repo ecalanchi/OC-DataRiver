@@ -70,6 +70,7 @@ import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
 import org.akaza.openclinica.dao.hibernate.EventDefinitionCrfTagDao;
 import org.akaza.openclinica.dao.hibernate.UserAccountDao;
+import org.akaza.openclinica.dao.hibernate.datariver.StudySubjectCustomLabelDao;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
 import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
 import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
@@ -206,6 +207,16 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     public static final String MODULE = "module";// to determine which module
 
     private CRFLocker crfLocker;
+    
+    //+DR added by DataRiver (EC) 22/02/2017
+ 	private StudySubjectCustomLabelDao studySubjectCustomLabelDao; 
+	
+ 	public StudySubjectCustomLabelDao getStudySubjectCustomLabelDao() {
+		studySubjectCustomLabelDao = this.studySubjectCustomLabelDao != null ? studySubjectCustomLabelDao : (StudySubjectCustomLabelDao) SpringServletAccess.getApplicationContext(context).getBean("studySubjectCustomLabelDao");
+         return studySubjectCustomLabelDao;
+ 	}
+ 	//+DR end added by DataRiver (EC) 22/02/2017
+
 
     // user is in
 
