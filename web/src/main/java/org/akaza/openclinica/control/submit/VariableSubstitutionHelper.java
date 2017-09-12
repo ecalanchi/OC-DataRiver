@@ -75,6 +75,9 @@ public class VariableSubstitutionHelper {
         }
         else tokensMap.put("studySubjectOID", "");
         tokensMap.put("studyName", encode(study.getName()));
+        //VG: 25/08/2017 - begin
+        tokensMap.put("studyOID", encode(study.getOid()));
+        //VG: 25/08/2017 - end
         tokensMap.put("eventName", encode(eventDef.getName()));
         if (event == null) tokensMap.put("eventOrdinal", "");
         else tokensMap.put("eventOrdinal", encode(Integer.toString(event.getSampleOrdinal())));
