@@ -14,12 +14,14 @@ import org.akaza.openclinica.service.extract.GenerateClinicalDataService;
 public class ClinicalDataCollectorResource {
 	private GenerateClinicalDataService generateClinicalDataService;
 	
-	public LinkedHashMap<String,OdmClinicalDataBean> generateClinicalData(String studyOID,String studySubjOID,String studyEventOID,String formVersionOID,boolean includeDNs,boolean includeAudits,Locale locale, int userId){
-	
-	return getGenerateClinicalDataService().getClinicalData(studyOID, studySubjOID,studyEventOID,formVersionOID,includeDNs,includeAudits,locale, userId);
-		
-		
+	//VG: 01/09/2017 - begin
+//	public LinkedHashMap<String,OdmClinicalDataBean> generateClinicalData(String studyOID,String studySubjOID,String studyEventOID,String formVersionOID,boolean includeDNs,boolean includeAudits, Locale locale, int userId){
+//		return getGenerateClinicalDataService().getClinicalData(studyOID, studySubjOID,studyEventOID,formVersionOID,includeDNs,includeAudits,locale, userId);
+//	}
+	public LinkedHashMap<String,OdmClinicalDataBean> generateClinicalData(String studyOID,String studySubjOID,String studyEventOID,String formVersionOID,boolean includeDNs,boolean includeAudits,boolean includeHiddenCrf, Locale locale, int userId){
+		return getGenerateClinicalDataService().getClinicalData(studyOID, studySubjOID,studyEventOID,formVersionOID,includeDNs,includeAudits,includeHiddenCrf,locale, userId);
 	}
+	//VG: 01/09/2017 - end
 
 	public GenerateClinicalDataService getGenerateClinicalDataService() {
 		return generateClinicalDataService;

@@ -38,8 +38,12 @@ public class ODMClinicalDataController {
 
 		ResourceBundleProvider.updateLocale(new Locale("en_US"));
 
+		//VG:01/09/2017 - begin
+		//String result = odmClinicaDataResource.getODMClinicaldata(
+		//		studyOID,formVersionOID,studyEventOID,studySubjectIdentifier,includeDns,includeAudits,request);
 		String result = odmClinicaDataResource.getODMClinicaldata(
-				studyOID,formVersionOID,studyEventOID,studySubjectIdentifier,includeDns,includeAudits,request);
+				studyOID,formVersionOID,studyEventOID,studySubjectIdentifier,includeDns,includeAudits,"n",request);
+		//VG:01/09/2017 - end
 		ObjectMapper objectMapper = new ObjectMapper();
 		return objectMapper.readTree(result);
 

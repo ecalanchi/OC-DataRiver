@@ -83,6 +83,9 @@ public class GenerateClinicalDataServiceImpl implements GenerateClinicalDataServ
 	
 	private boolean collectDns=true;
 	private boolean collectAudits=true;
+	//VG: 01/09/2017 - begin
+	private boolean collectHiddenCrfs=false;
+	//VG: 01/09/2017 - end
 	private AuditLogEventDao auditEventDAO;
 	private Locale locale;
 	
@@ -111,6 +114,16 @@ public class GenerateClinicalDataServiceImpl implements GenerateClinicalDataServ
 	public void setCollectAudits(boolean collectAudits) {
 		this.collectAudits = collectAudits;
 	}
+	
+	//VG: 01/09/2017 - begin
+	public boolean isCollectHiddenCrfs() {
+		return collectHiddenCrfs;
+	}
+
+	public void setCollectHiddenCrfs(boolean collectHiddenCrfs) {
+		this.collectHiddenCrfs = collectHiddenCrfs;
+	}
+	//VG: 01/09/2017 - end
 
 	public StudyEventDefinitionDao getStudyEventDefDao() {
 		return studyEventDefDao;
@@ -361,7 +374,13 @@ public class GenerateClinicalDataServiceImpl implements GenerateClinicalDataServ
 				
 				if(hiddenCrfs.contains(ecrf.getCrfVersion().getCrf()))
 				{
-					hiddenCrfCheckPassed = false;
+					//VG: 01/09/2017 - begin
+					//hiddenCrfCheckPassed = false;
+					if(!collectHiddenCrfs){
+						hiddenCrfCheckPassed = false;
+					}
+					//VG: 01/09/2017 - end
+
 				}
 				
 			}
@@ -850,11 +869,18 @@ public class GenerateClinicalDataServiceImpl implements GenerateClinicalDataServ
 	 * This is a generic method where the control enters first. Regardless what URL is being used. Depending upon the combination of URL parameters, further course is determined. 
 	 */
 	@Override
+	//VG: 01/09/2017 - begin
+	//public LinkedHashMap<String, OdmClinicalDataBean> getClinicalData(String studyOID, String studySubjectOID,
+	//		String studyEventOID, String formVersionOID,Boolean collectDNs,Boolean collectAudit, Locale locale, int userId) {
 	public LinkedHashMap<String, OdmClinicalDataBean> getClinicalData(String studyOID, String studySubjectOID,
-			String studyEventOID, String formVersionOID,Boolean collectDNs,Boolean collectAudit, Locale locale, int userId) {
+			String studyEventOID, String formVersionOID,Boolean collectDNs,Boolean collectAudit,Boolean collectHiddenCrf, Locale locale, int userId) {
+	//VG: 01/09/2017 - end
 		setLocale(locale);
 		setCollectDns(collectDNs);
 		setCollectAudits(collectAudit);
+		//VG: 01/09/2017 - begin
+		setCollectHiddenCrfs(collectHiddenCrf);
+		//VG: 01/09/2017 - end
 		LinkedHashMap<String,OdmClinicalDataBean> clinicalDataHash = new LinkedHashMap<String, OdmClinicalDataBean>();
 		UserAccount userAccount = getUserAccountDao().findByColumnName(userId,"userId");
 		LOGGER.debug("Entering the URL with "+studyOID+":"+studySubjectOID+":"+studyEventOID+":"+formVersionOID+":DNS:"+collectDNs+":Audits:"+collectAudit);

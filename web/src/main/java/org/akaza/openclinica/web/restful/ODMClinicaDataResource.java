@@ -105,22 +105,35 @@ public class ODMClinicaDataResource {
 			@PathParam("formVersionOID") String formVersionOID,
 			@PathParam("studyEventOID") String studyEventOID,
 			@PathParam("studySubjectIdentifier") String studySubjectIdentifier,
+			@DefaultValue("n") @QueryParam("includeHiddenCRFs") String includeHiddenCrfs,
 			@DefaultValue("n") @QueryParam("includeDNs") String includeDns,
 			@DefaultValue("n") @QueryParam("includeAudits") String includeAudits,@Context HttpServletRequest request) {
 		LOGGER.debug("Requesting clinical data resource");
 		boolean includeDN=false;
 		boolean includeAudit= false;
+		//VG: 01/09/2017 - begin
+		boolean includeHiddenCrf= false;
+		//VG: 01/09/2017 - end
+		
 		if(includeDns.equalsIgnoreCase("no")||includeDns.equalsIgnoreCase("n")) includeDN=false;
 		if(includeAudits.equalsIgnoreCase("no")||includeAudits.equalsIgnoreCase("n")) includeAudit=false;
 		if(includeDns.equalsIgnoreCase("yes")||includeDns.equalsIgnoreCase("y")) includeDN=true;
 		if(includeAudits.equalsIgnoreCase("yes")||includeAudits.equalsIgnoreCase("y")) includeAudit=true;
+		//VG: 01/09/2017 - begin
+		if(includeHiddenCrfs.equalsIgnoreCase("no")||includeHiddenCrfs.equalsIgnoreCase("n")) includeHiddenCrf=false;
+		if(includeHiddenCrfs.equalsIgnoreCase("yes")||includeHiddenCrfs.equalsIgnoreCase("y")) includeHiddenCrf=true;
+		//VG: 01/09/2017 - end
 		int userId = ((UserAccountBean)request.getSession().getAttribute("userBean")).getId();
 		XMLSerializer xmlSerializer = new XMLSerializer();
 		FullReportBean report = getMetadataCollectorResource().collectODMMetadataForClinicalData(studyOID,
 						formVersionOID,
 						getClinicalDataCollectorResource()
+						//VG: 01/09/2017 - begin
+//						.generateClinicalData(studyOID, getStudySubjectOID(studySubjectIdentifier,studyOID),
+//						studyEventOID, formVersionOID,includeDN,includeAudit, request.getLocale(), userId));
 								.generateClinicalData(studyOID, getStudySubjectOID(studySubjectIdentifier,studyOID),
-										studyEventOID, formVersionOID,includeDN,includeAudit,request.getLocale(), userId));
+										studyEventOID, formVersionOID,includeDN,includeAudit,includeHiddenCrf, request.getLocale(), userId));
+						//VG: 01/09/2017 - end
 		if(report.getClinicalDataMap()==null)
 		    return null;
 		report.createOdmXml(true);
@@ -213,24 +226,36 @@ public class ODMClinicaDataResource {
 			@PathParam("formVersionOID") String formVersionOID,
 			@PathParam("studySubjectIdentifier") String studySubjectIdentifier,
 			@PathParam("studyEventOID") String studyEventOID,
+			@DefaultValue("n") @QueryParam("includeHiddenCRFs") String includeHiddenCrfs,
 			@DefaultValue("n") @QueryParam("includeDNs") String includeDns,
 			@DefaultValue("n") @QueryParam("includeAudits") String includeAudits,@Context HttpServletRequest request) {
 		LOGGER.debug("Requesting clinical data resource");
 		boolean includeDN=false;
 		boolean includeAudit= false;
+		//VG: 01/09/2017 - begin
+		boolean includeHiddenCrf= false;
+		//VG: 01/09/2017 - end
 		int userId = ((UserAccountBean)request.getSession().getAttribute("userBean")).getId();
 
 		if(includeDns.equalsIgnoreCase("no")||includeDns.equalsIgnoreCase("n")) includeDN=false;
 		if(includeAudits.equalsIgnoreCase("no")||includeAudits.equalsIgnoreCase("n")) includeAudit=false;
 		if(includeDns.equalsIgnoreCase("yes")||includeDns.equalsIgnoreCase("y")) includeDN=true;
 		if(includeAudits.equalsIgnoreCase("yes")||includeAudits.equalsIgnoreCase("y")) includeAudit=true;
+		//VG: 01/09/2017 - begin
+		if(includeHiddenCrfs.equalsIgnoreCase("no")||includeHiddenCrfs.equalsIgnoreCase("n")) includeHiddenCrf=false;
+		if(includeHiddenCrfs.equalsIgnoreCase("yes")||includeHiddenCrfs.equalsIgnoreCase("y")) includeHiddenCrf=true;
+		//VG: 01/09/2017 - end
 		FullReportBean report = getMetadataCollectorResource()
 				.collectODMMetadataForClinicalData(
 						studyOID,
 						formVersionOID,
 						getClinicalDataCollectorResource()
+						//VG: 01/09/2017 - begin
+//						.generateClinicalData(studyOID, getStudySubjectOID(studySubjectIdentifier,studyOID),
+//						studyEventOID, formVersionOID,includeDN,includeAudit, request.getLocale(), userId));
 								.generateClinicalData(studyOID, getStudySubjectOID(studySubjectIdentifier,studyOID),
-										studyEventOID, formVersionOID,includeDN,includeAudit,request.getLocale(), userId));
+										studyEventOID, formVersionOID,includeDN,includeAudit,includeHiddenCrf, request.getLocale(), userId));
+						//VG: 01/09/2017 - end
 
 		report.createOdmXml(true);
 		LOGGER.debug(report.getXmlOutput().toString().trim());
