@@ -477,7 +477,7 @@ margin-top:20px; updateTabs(<c:out value="${tabId}"/>);--%>
 <!--  just changed item oid <c:out value="${repeatParentId}"/> -->
 <c:if test="${! (displayItem.itemGroup.groupMetaBean.header eq '')}">
     <div class="aka_group_header">
-        <strong><c:out value="${displayItem.itemGroup.groupMetaBean.header}"/></strong>
+        <strong><c:out value="${displayItem.itemGroup.groupMetaBean.header}" escapeXml="false"/></strong>
     </div>
 </c:if>
 <table border="0" cellspacing="0" cellpadding="0" class="aka_form_table" width="100%">
