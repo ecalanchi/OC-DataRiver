@@ -11,6 +11,7 @@ import org.akaza.openclinica.bean.core.Role;
 import org.akaza.openclinica.bean.core.Status;
 import org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import org.akaza.openclinica.bean.managestudy.StudyBean;
+import org.akaza.openclinica.bean.managestudy.StudyGroupClassBean;
 import org.akaza.openclinica.bean.service.StudyParameterValueBean;
 import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.admin.EventStatusStatisticsTableFactory;
@@ -20,6 +21,7 @@ import org.akaza.openclinica.control.admin.StudySubjectStatusStatisticsTableFact
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.form.Validator;
+import org.akaza.openclinica.control.randomization.RandomizationStatusStatisticsTableFactory;
 import org.akaza.openclinica.control.submit.ListStudySubjectTableFactory;
 import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
@@ -69,6 +71,9 @@ public class ChangeStudyServlet extends SecureController {
     private StudyGroupDAO studyGroupDAO;
     private DiscrepancyNoteDAO discrepancyNoteDAO;
     private StudyParameterValueDAO studyParameterValueDAO;
+    //+DR added by DataRiver (EC) 28/11/2017
+	private RandomizationStatusStatisticsTableFactory randomizationStatusStatisticsTableFactory;
+	//+DR end added by DataRiver (EC) 28/11/2017
 
     // < ResourceBundlerestext;
 
@@ -301,6 +306,19 @@ public class ChangeStudyServlet extends SecureController {
             setupStudySubjectStatusStatisticsTable();
             if (currentStudy.getParentStudyId() == 0) {
                 setupStudyStatisticsTable();
+                
+                //+DR added by DataRiver (EC) 28/11/2017
+                studyGroupClassDAO = getStudyGroupClassDAO();
+                ArrayList list = studyGroupClassDAO.findAllRandomizedByStudy(currentStudy);
+                Iterator i = list.iterator();
+                int sgCount = 0;
+                while(i.hasNext()){
+                	StudyGroupClassBean sgcb = (StudyGroupClassBean) i.next();
+                	setupRandomizationStatusStatisticsTable(sgcb, sgCount);
+                	sgCount++;
+                }
+                //+DR end added by DataRiver (EC) 28/11/2017  
+                
             }
 
         }
@@ -447,6 +465,26 @@ public class ChangeStudyServlet extends SecureController {
 	public void setStudyParameterValueDAO(StudyParameterValueDAO studyParameterValueDAO) {
 		this.studyParameterValueDAO = studyParameterValueDAO;
 	}
+	
+    /**
+     * @author DataRiver (EC) 28/11/2017
+     */
+    private void setupRandomizationStatusStatisticsTable(StudyGroupClassBean studyGroupClassBean, int i) {
+
+        RandomizationStatusStatisticsTableFactory factory = getRandomizationStatusStatisticsTableFactory();
+        factory.setStudyGroupClassBean(studyGroupClassBean);
+        factory.setStudyGroupDao(getStudyGroupDAO());
+
+        String randomizationStatusStatistics = factory.createTable(request, response).render();
+        request.setAttribute("randomizationStatusStatistics" + i, randomizationStatusStatistics);
+    }
+    
+    //+DR added by DataRiver (EC) 28/11/2017
+    private RandomizationStatusStatisticsTableFactory getRandomizationStatusStatisticsTableFactory() {
+    	randomizationStatusStatisticsTableFactory = this.randomizationStatusStatisticsTableFactory != null ? randomizationStatusStatisticsTableFactory : (RandomizationStatusStatisticsTableFactory) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationStatusStatisticsTableFactory");
+		return randomizationStatusStatisticsTableFactory;
+	}
+    //+DR end added by DataRiver (EC) 28/11/2017
 
     
 }

@@ -106,7 +106,9 @@
 <p><fmt:message key="based_ID_subject_exist_confirm" bundle="${restext}"/></p>
 
 <br/><fmt:message key="field_required" bundle="${resword}"/></P>
-<form action="AddNewSubject" method="post">
+<%-- //+DR modified by DataRiver (EC) 28/11/2017 --%>
+<form action="AddNewSubject" method="post" onsubmit="submitDone.disabled = true;">
+<%-- //+DR end modified by DataRiver (EC) 28/11/2017 --%>
 <jsp:include page="../include/showSubmitted.jsp" />
 <input type="hidden" name="existingSubShown" value="1">
 <input type="hidden" name="editDob" value="<c:out value="${editDob}"/>">
@@ -331,12 +333,16 @@
 <div class="textbox_center">
 <table border="0" cellpadding="0">
 
-  <tr valign="top">
+<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+  <tr id="studyGroupClassRow" valign="top">
 	<td class="formlabel"><fmt:message key="subject_group_class" bundle="${resword}"/>:
 	<td class="table_cell">
 	<c:set var="count" value="0"/>
+	<c:set var="countView" value="0"/>
 	<table border="0" cellpadding="0">
 	  <c:forEach var="group" items="${groups}">
+	  
+	  <c:if test="${group.groupClassTypeId != 5}">  
 	  <tr valign="top">
 	   <td><b><c:out value="${group.name}"/></b></td>
 	   <td><div class="formfieldM_BG">
@@ -368,12 +374,19 @@
 	    	<div class="formfieldXL_BG"><input type="text" class="formfieldXL" name="notes<c:out value="${count}"/>"  value="<c:out value="${group.groupNotes}"/>"></div>
 	        <c:import url="../showMessage.jsp"><c:param name="key" value="notes${count}" /></c:import>
 	        </td></tr>
+	        <c:set var="countView" value="${countView+1}"/>
+	       </c:if> 
+	       
 	       <c:set var="count" value="${count+1}"/>
 	  </c:forEach>
 	  </table>
 	</td>
   </tr>
 
+  <c:if test="${countView==0}">
+  	<script type="text/javascript">document.getElementById("studyGroupClassRow").style.display = 'none';</script>
+  </c:if>
+  <!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
 
 
 </table>
@@ -387,11 +400,13 @@
 <br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr>
-<td>
+<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+<!-- <td>
 <input type="submit" name="submitEvent" value="<fmt:message key="enroll_and_add_study_event" bundle="${resword}"/>" class="button_long">
 </td>
-<td><input type="submit" name="submitEnroll" value="<fmt:message key="enroll_and_add_another" bundle="${resword}"/>" class="button_long"></td>
+<td><input type="submit" name="submitEnroll" value="<fmt:message key="enroll_and_add_another" bundle="${resword}"/>" class="button_long"></td> -->
 <td><input type="submit" name="submitDone" value="<fmt:message key="enroll_and_finish" bundle="${resword}"/>" class="button_long"></td>
+<!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
 </tr>
 </table>
 </form>

@@ -162,6 +162,9 @@
 	<c:set var="count" value="0"/>
 	<table border="0" cellpadding="0">
 	  <c:forEach var="group" items="${groups}">
+<!-- //+DR added by DataRiver 28/11/2017 -->	  
+	  <c:if test="${group.groupClassTypeId!=5}">
+<!-- //+DR end added by DataRiver 28/11/2017 -->	  
 	  <tr valign="top">
 	   <td><b><c:out value="${group.name}"/></b></td>
 	   <td><div class="formfieldM_BG"> <select name="studyGroupId<c:out value="${count}"/>" class="formfieldM">
@@ -190,6 +193,9 @@
 	          <c:import url="../showMessage.jsp"><c:param name="key" value="notes${count}" /></c:import>
 	        </td></tr>
 	       <c:set var="count" value="${count+1}"/>
+<!-- //+DR added by DataRiver 28/11/2017 -->	
+	       </c:if>
+<!-- //+DR added by DataRiver 28/11/2017 -->		       
 	  </c:forEach>
 	  </table>
 	</td>

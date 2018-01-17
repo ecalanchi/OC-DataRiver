@@ -92,7 +92,9 @@
 
 <p class="text">
 <br/><fmt:message key="field_required" bundle="${resword}"/></P>
-<form action="AddNewSubject" method="post">
+<%-- //+DR modified by DataRiver (EC) 28/11/2017 --%>
+<form action="AddNewSubject" method="post" onsubmit="submitDone.disabled = true;">
+<%-- //+DR end modified by DataRiver (EC) 28/11/2017 --%>
 <jsp:include page="../include/showSubmitted.jsp" />
 
 <div style="width: 550px">
@@ -108,7 +110,9 @@
 					<td valign="top"><div class="formfieldXL_BG">
 					<c:choose>
 					 <c:when test="${study.studyParameterConfig.subjectIdGeneration =='auto non-editable'}">
-					  <input onfocus="this.select()" type="text" value="<c:out value="${label}"/>" size="45" class="formfield" disabled>
+					 <!-- //+DR modified by DataRiver (EC) 28/11/2017 --> 
+					  <input onfocus="this.select()" type="text" value="<c:out value="${label}"/>" size="45" class="formfieldXL" disabled>
+					 <!-- //+DR end modified by DataRiver (EC) 28/11/2017 --> 
 					  <input type="hidden" name="label" value="<c:out value="${label}"/>">
 					 </c:when>
 					 <c:otherwise>
@@ -341,7 +345,8 @@
 
 <c:if test="${(!empty groups)}">
 <br>
-<div style="width: 550px">
+<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+<div id="studyGroupClassDiv" style="width: 550px">
 <div class="box_T"><div class="box_L"><div class="box_R"><div class="box_B"><div class="box_TL"><div class="box_TR"><div class="box_BL"><div class="box_BR">
 
 <div class="textbox_center">
@@ -351,8 +356,11 @@
 	<td class="formlabel"><fmt:message key="subject_group_class" bundle="${resword}"/>:
 	<td class="table_cell">
 	<c:set var="count" value="0"/>
+	<c:set var="countView" value="0"/>
 	<table border="0" cellpadding="0">
 	  <c:forEach var="group" items="${groups}">
+	  
+ 	  <c:if test="${group.groupClassTypeId != 5}">
 	  <tr valign="top">
 	   <td><b><c:out value="${group.name}"/></b></td>
 	   <td><div class="formfieldM_BG">
@@ -383,7 +391,11 @@
 	    	<div class="formfieldXL_BG"><input onfocus="this.select()" type="text" class="formfieldXL" name="notes<c:out value="${count}"/>"  value="<c:out value="${group.groupNotes}"/>"></div>
 	        <c:import url="../showMessage.jsp"><c:param name="key" value="notes${count}" /></c:import>
 	        </td></tr>
+	        <c:set var="countView" value="${countView+1}"/>
+	       
+	       </c:if>
 	       <c:set var="count" value="${count+1}"/>
+	       
 	  </c:forEach>
 	  </table>
 	</td>
@@ -397,16 +409,25 @@
 </div></div></div></div></div></div></div></div>
 
 </div>
+
+<c:if test="${countView == 0}">
+	<script type="text/javascript">document.getElementById("studyGroupClassDiv").style.visibility = 'hidden';</script>
+</c:if>
+<!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
+
+
 </c:if>
 <br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr>
-<td>
+<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+<!--  <td>
 <input type="submit" name="submitEvent" value="<fmt:message key="save_and_assign_study_event" bundle="${restext}"/>" class="button_long">
 </td>
-<td><input type="submit" name="submitEnroll" value="<fmt:message key="save_and_add_next_subject" bundle="${restext}"/>" class="button_long"></td>
+<td><input type="submit" name="submitEnroll" value="<fmt:message key="save_and_add_next_subject" bundle="${restext}"/>" class="button_long"></td>  -->
 <td><input type="submit" name="submitDone" value="<fmt:message key="save_and_finish" bundle="${restext}"/>" class="button_long"></td>
 <td><input type="button" onclick="confirmCancel('ListStudySubjects');"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/></td>
+<!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
 </tr>
 </table>
 </form>

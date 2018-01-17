@@ -138,7 +138,9 @@
     }
     jQuery(document).ready(function() {
         jQuery('#addSubject').click(function() {
-            jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
+        	//+DR modified by DataRiver (EC) 28/11/2017
+            jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", width: "500px", top: "10px" } });
+          	//+DR end modified by DataRiver (EC) 28/11/2017
         });
 
         jQuery('#cancel').click(function() {
@@ -173,6 +175,11 @@
         if(id.indexOf('studySubjectStatusStatistics') == -1)  {
             setExportToLimit(id, '');
         }
+        //+DR added by DataRiver (EC) 28/11/2017
+        if(id.indexOf('randomizationStatusStatistics') == -1)  {
+            setExportToLimit(id, '');
+        }
+		//+DR end added by DataRiver (EC) 28/11/2017
         createHiddenInputFieldsForLimitAndSubmit(id);
     }
 
@@ -209,6 +216,51 @@
     </td>
 </tr>
 </table>
+
+
+<!--//+DR added by DataRiver (EC) 28/11/2017 -->
+<c:if test="${study.allocation=='Randomized Clinical Trial'}">
+<p>
+<table>
+<tr>
+	<td valign="top">
+    <form  action="${pageContext.request.contextPath}/MainMenu">
+        ${randomizationStatusStatistics0}
+    </form>
+    </td>
+    <c:if test="${randomizationStatusStatistics1 != null}">
+	    <td valign="top">
+	    <form  action="${pageContext.request.contextPath}/MainMenu">
+	        ${randomizationStatusStatistics1}
+	    </form>
+	    </td>
+    </c:if>
+</tr>
+</table>
+</p>
+	<c:if test="${randomizationStatusStatistics2 != null}">
+	<p>
+	<table>
+	<tr>
+		<td valign="top">
+	    <form  action="${pageContext.request.contextPath}/MainMenu">
+	        ${randomizationStatusStatistics2}
+	    </form>
+	    </td>
+	    <c:if test="${randomizationStatusStatistics3 != null}">
+		    <td valign="top">
+		    <form  action="${pageContext.request.contextPath}/MainMenu">
+		        ${randomizationStatusStatistics3}
+		    </form>
+		    </td>
+	    </c:if>
+	</tr>
+	</table>
+	</p>
+	</c:if>
+</c:if>
+<!--//+DR end added by DataRiver (EC) 28/11/2017 -->
+
 
 </c:if>
 

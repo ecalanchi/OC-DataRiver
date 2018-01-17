@@ -11,7 +11,9 @@
   <table border="0" cellpadding="0" cellspacing="0" width="100%"
          style="background-color:#CCCCCC">
     <tr id="AddSubjectRow1" style="display:none">
-		<form id="subjectForm" name="subjectForm" action="AddNewSubject" method="post">
+		<%-- //+DR modified by DataRiver (EC) 28/11/2017 --%>
+		<form id="subjectForm" name="subjectForm" action="AddNewSubject" method="post" onsubmit="addSubject.disabled = true;">
+		<%-- //+DR end modified by DataRiver (EC) 28/11/2017 --%>
 		   
 			<td class="table_cell_left" colspan="2" nowrap>
 			  <jsp:include page="../include/showSubmitted.jsp" />
@@ -50,9 +52,13 @@
  
 			 
 			<c:set var="count" value="0"/>
+			
+			<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+			<c:set var="countView" value="0"/>
 			<c:forEach var="groupClass" items="${studyGroupClasses}">			
-					
-			<td valign="top" class="table_cell" nowrap>
+			
+			<c:if test="${group.groupClassTypeId != 5}"> 		
+			<td valign="top" id="studyGroupClassTd" class="table_cell" nowrap>
 	
 			  <select name="studyGroupId<c:out value="${count}"/>" tabindex="<c:out value="${tabCount}"/>" class="formfield">
 	
@@ -62,9 +68,18 @@
 				 </c:forEach>
 			  </select>
 			</td>
+				<c:set var="countView" value="${countView+1}"/>	
+			</c:if>
+	
 				<c:set var="count" value="${count+1}"/>	
 				<c:set var="tabCount" value="${tabCount+1}"/>
+
 			</c:forEach>
+			
+			<c:if test="${countView==0}">
+				<script type="text/javascript">document.getElementById("studyGroupClassTd").style.display = 'none';</script>
+			</c:if>
+			<!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
 					
 			<td valign="top" colspan="6" class="table_cell" nowrap>
 			<table border="0" cellpadding="0" cellspacing="0" width="100%">

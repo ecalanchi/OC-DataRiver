@@ -9,6 +9,20 @@
 		<name>findAll</name>
 		<sql>SELECT * FROM study_group_class</sql>
 	</query>
+<!-- //+DR added by DataRiver 28/11/2017 -->
+	<query>
+		<name>findAllRandomizedByStudy</name>
+		<sql>
+			SELECT sg.*, st.name as study_name, gct.name as type_name 
+			FROM study_group_class sg, study st, group_class_types gct
+			WHERE sg.group_class_type_id=gct.group_class_type_id
+			AND sg.study_id=st.study_id
+			AND (st.study_id=? or st.parent_study_id=?)
+			AND sg.group_class_type_id=5
+			AND sg.status_id=1
+		</sql>
+	</query>
+<!-- //+DR end added by DataRiver 28/11/2017 -->
 	<query>
 		<name>findAllByStudy</name>
 		<sql>

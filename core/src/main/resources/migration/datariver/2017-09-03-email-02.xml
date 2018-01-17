@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	           xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+  <changeSet author="enrico.calanchi" id="2015-03-10-5907" dbms="postgresql">
+  	<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from datariver_email_type where email_type_id=5</sqlCheck>
+        </preConditions>
+	<comment>Insert new records in the datariver_email_type table</comment>
+        <insert tableName="datariver_email_type">
+            <column name="email_type_id" valueNumeric="5"/>
+            <column name="description" value="send email test"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

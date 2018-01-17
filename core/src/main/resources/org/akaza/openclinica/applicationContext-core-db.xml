@@ -81,6 +81,33 @@
     <bean id="queryStore" class="org.akaza.openclinica.dao.QueryStore" init-method="init">
         <property name="dataSource" ref="dataSource"/>
     </bean>
+    
+    <!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+	<!-- Database properties file -->
+	<bean id="databaseRandomizationProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="/WEB-INF/databaseRandomization.properties"/>
+	</bean>
+	
+	<!-- Postgres database connection with c3p0 -->
+	<bean id="randomizationDataSource" class="org.akaza.openclinica.core.ExtendedBasicDataSource" destroy-method="close">
+	<property name="driverClassName" value="${jdbc.driverClassName}"/>
+      <property name="maxActive" value="50"/>
+      <property name="maxIdle" value="2"/>
+      <property name="maxWait" value="180000"/>
+      <property name="removeAbandoned" value="true"/>
+      <property name="removeAbandonedTimeout" value="300"/>
+      <property name="logAbandoned" value="true"/>
+      <property name="testWhileIdle" value="true"/>
+      <property name="testOnReturn" value="true"/>
+      <property name="timeBetweenEvictionRunsMillis" value="300000"/>
+      <property name="minEvictableIdleTimeMillis" value="600000"/>
+      <property name="url" value="${jdbc.url}"/>
+      <property name="username" value="${jdbc.username}"/>
+      <property name="password" value="${jdbc.password}"/>
+      <property name="bigStringTryClob" value="true"/>
+	
+	</bean>
+	<!-- //+DR end added by DataRiver 28/11/2017 -->
       
     <!-- Exposing old-fashioned DAOs as Spring beans -->
    <!--  <bean class="org.akaza.openclinica.dao.login.UserAccountDAO">

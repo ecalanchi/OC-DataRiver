@@ -262,7 +262,6 @@
 		</dependency>
 	</dependencies>
     <build>
-	   <pluginManagement> 
 	       <plugins>
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
@@ -285,7 +284,6 @@
 	               <artifactId>buildnumber-maven-plugin</artifactId>
 	           </plugin>
 	       </plugins>
-	   </pluginManagement> 
     </build>
 
     <properties>

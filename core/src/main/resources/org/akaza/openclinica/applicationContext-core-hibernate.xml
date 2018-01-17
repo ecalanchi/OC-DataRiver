@@ -12,6 +12,32 @@
                             http://www.springframework.org/schema/aop/spring-aop-3.0.xsd"
                             >
 
+<!--  //+DR added by DataRiver (LM) 28/11/2017 -->
+<bean id="sessionFactoryRandomization" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+       <property name="dataSource" ref="randomizationDataSource"/>
+	<property name="hibernateProperties">
+           <props>
+               <prop key="hibernate.show_sql">false</prop>
+               <prop key="hibernate.format_sql">true</prop>
+               <prop key="hibernate.dialect">s[hibernate.dialect]</prop>
+          <!-- <prop key="hibernate.cache.region.factory_class"> net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
+          <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory</prop>           
+               <prop key="hibernate.cache.use_second_level_cache">true</prop>
+              
+              <!--  <prop key="net.sf.ehcache.configurationResourceName">ehcache.xml</prop> -->
+			<prop key="hibernate.cache.provider_configuration_file_resource_path">/ehcache.xml</prop>
+           <prop key="hibernate.generate_statistics">true</prop>
+              <prop key="hibernate.cache.use_query_cache">true</prop>
+              <prop key="hibernate.generate_statistics">true</prop>
+              
+               
+           </props>
+       </property>
+<!--         <property name="namingStrategy"> -->
+<!--             <bean class="org.hibernate.cfg.ImprovedNamingStrategy"/> -->
+<!--         </property> -->
+   </bean>
+<!-- //+DR end added by DataRiver (LM) 28/11/2017 -->
 
 
     <!-- A Hibernate SessionFactory for mapping Domain Objects from object to relation tables -->
@@ -57,6 +83,15 @@
                 <!-- //+DR added by DataRiver (EC) 22/02/2017 -->
 				<value>org.akaza.openclinica.domain.datariver.StudySubjectCustomLabelBean</value>
 				<!-- //+DR end added by DataRiver (EC) 22/02/2017 -->
+				
+				<!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+                <value>org.akaza.openclinica.domain.datariver.DatariverEmailBean</value>
+                <value>org.akaza.openclinica.domain.datariver.DatariverEmailLogBean</value>
+                <value>org.akaza.openclinica.domain.datariver.DatariverEmailTypeBean</value>
+ 				<value>org.akaza.openclinica.domain.datariver.RandomizationArmsBean</value>
+ 				<value>org.akaza.openclinica.domain.datariver.RandomizationSubjectsBean</value>
+ 				<value>org.akaza.openclinica.domain.datariver.RandomizationVarBean</value>                
+ 				<!-- //+DR end added by DataRiver (EC) 28/11/2017 -->
                 
  
                 <!-- The following beans are coded for data maping, currently they are partially working, to resume the work uncomment it -->
@@ -197,7 +232,30 @@
 	</bean>
 	<!-- //+DR end added by DataRiver (EC) 22/02/2017-->	
 
-  
+	<!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+	<bean id="datariverEmailDao" class="org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="datariverEmailLogDao" class="org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailLogDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="datariverEmailTypeDao" class="org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailTypeDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="randomizationArmsDao" class="org.akaza.openclinica.dao.hibernate.datariver.RandomizationArmsDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="randomizationSubjectsDao" class="org.akaza.openclinica.dao.hibernate.datariver.RandomizationSubjectsDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="randomizationVarDao" class="org.akaza.openclinica.dao.hibernate.datariver.RandomizationVarDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean id="randomizationCustomDao" class="org.akaza.openclinica.dao.hibernate.datariver.RandomizationCustomDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactoryRandomization"></property>
+	</bean>
+    <!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+    
   <bean id="usageStatsServiceDAO" class="org.akaza.openclinica.dao.hibernate.UsageStatsServiceDAO" parent="abstractDomainDao" autowire="byName" />
   <bean id="openClinicaVersionDAO" class="org.akaza.openclinica.dao.hibernate.OpenClinicaVersionDAO" parent="abstractDomainDao" autowire="byName" />
   <bean id="crfVersionDao" class="org.akaza.openclinica.dao.hibernate.CrfVersionDao" parent="abstractDomainDao" autowire="byName" />

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+
+
+
+
+	<!-- CREATE TABLE randomization_var -->
+	<!-- ( -->
+	<!-- study_group_class_id integer NOT NULL, -->
+	<!-- study_event_definition_id integer, -->
+	<!-- crf_id integer, -->
+	<!-- stratification_var_ids character varying, -->
+	<!-- randomization_list character varying, -->
+	<!-- CONSTRAINT pk_randomization_var PRIMARY KEY (study_group_class_id), -->
+
+	<!-- ) -->
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-1"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="randomization_var" />
+			</not>
+		</preConditions>
+		<comment>Create a table named randomization_var</comment>
+		<createTable tableName="randomization_var">
+			<column autoIncrement="false" name="study_group_class_id"
+				type="int">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+			<column name="study_event_definition_id" type="INT" />
+			<column name="crf_id" type="INT" />
+			<column name="stratification_var_ids" type="VARCHAR" />
+			<column name="randomization_list" type="VARCHAR" />
+		</createTable>
+	</changeSet>
+
+	<!-- CONSTRAINT fk_crf_id_fk_crf_id FOREIGN KEY (crf_id) -->
+	<!-- REFERENCES crf (crf_id) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION, -->
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-2"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists
+					foreignKeyName="fk_crf_id_fk_crf_id" />
+			</not>
+		</preConditions>
+		<comment>Add foreign Key for crf_id column</comment>
+		<addForeignKeyConstraint constraintName="fk_crf_id_fk_crf_id"
+			deferrable="false" initiallyDeferred="false" onDelete="RESTRICT"
+			onUpdate="RESTRICT" baseColumnNames="crf_id" baseTableName="randomization_var"
+			referencedTableName="crf" referencedColumnNames="crf_id" />
+	</changeSet>
+
+	<!-- CONSTRAINT fk_study_event_definition_id_fk_study_event_definition FOREIGN 
+		KEY (study_event_definition_id) -->
+	<!-- REFERENCES study_event_definition (study_event_definition_id) MATCH 
+		SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION, -->
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-3"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT 1 FROM pg_constraint WHERE conname = 'fk_study_event_definition_id_fk_study_event_definition'</sqlCheck>
+        </preConditions>
+		<comment>Add foreign Key for study_event_definition_id column</comment>
+		<sql splitStatements="false">
+		ALTER TABLE randomization_var ADD CONSTRAINT fk_study_event_definition_id_fk_study_event_definition FOREIGN 
+		KEY (study_event_definition_id) REFERENCES study_event_definition (study_event_definition_id) MATCH SIMPLE
+		ON UPDATE NO ACTION ON DELETE NO ACTION;
+		</sql>
+	</changeSet>
+
+	<!-- CONSTRAINT fk_study_group_class_id_fk_study_group_class_id FOREIGN 
+		KEY (study_group_class_id) -->
+	<!-- REFERENCES study_group_class (study_group_class_id) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION -->
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-4"
+	dbms="postgresql">
+	<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT 1 FROM pg_constraint WHERE conname = 'fk_study_group_class_id_fk_study_group_class_id'</sqlCheck>
+        </preConditions>
+	<comment>Add foreign Key for study_group_class_id column</comment>
+	<sql splitStatements="false">
+		ALTER TABLE randomization_var ADD CONSTRAINT
+		fk_study_group_class_id_fk_study_group_class_id FOREIGN
+		KEY (study_group_class_id)
+		REFERENCES study_group_class (study_group_class_id) MATCH SIMPLE
+	    ON UPDATE NO ACTION ON DELETE NO ACTION;
+	
+	</sql>
+</changeSet>
+
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-5"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="randomization_arms" />
+			</not>
+		</preConditions>
+		<comment>Create a table named randomization_arms</comment>
+		<createTable tableName="randomization_arms">
+			<column autoIncrement="false" name="arm" type="int">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+			<column name="ratio" type="INT" />
+			<column name="study_group_class_id" type="INT" />
+		</createTable>
+	</changeSet>
+
+	<!-- CONSTRAINT fk_arm_fk_study_group_id FOREIGN KEY (arm) -->
+	<!-- REFERENCES study_group (study_group_id) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION, -->
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-6"
+	dbms="postgresql">
+	<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT 1 FROM pg_constraint WHERE conname = 'fk_arm_fk_study_group_id'</sqlCheck>
+    </preConditions>
+	<comment>Add foreign Key for arm column</comment>
+	<sql splitStatements="false">
+		ALTER TABLE randomization_arms ADD
+		CONSTRAINT fk_arm_fk_study_group_id FOREIGN KEY (arm)
+		REFERENCES study_group (study_group_id) MATCH SIMPLE
+		ON UPDATE NO ACTION ON DELETE NO ACTION;
+	</sql>
+</changeSet>
+
+
+
+
+	<!-- CONSTRAINT fk_study_group_class_id_fk_study_group_class_id FOREIGN 
+		KEY (study_group_class_id) -->
+	<!-- REFERENCES randomization_var (study_group_class_id) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION -->
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-7"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT 1 FROM pg_constraint WHERE conname = 'fk_study_group_class_id_fk_study_group_class_id'</sqlCheck>
+   		 </preConditions>
+		<comment>Add foreign Key for study_group_class_id column</comment>
+		<addForeignKeyConstraint
+			constraintName="fk_study_group_class_id_fk_study_group_class_id"
+			deferrable="false" initiallyDeferred="false" onDelete="RESTRICT"
+			onUpdate="RESTRICT" baseColumnNames="study_group_class_id"
+			baseTableName="randomization_arms" referencedTableName="randomization_var"
+			referencedColumnNames="study_group_class_id" />
+	</changeSet>
+
+
+
+	<!-- CREATE TABLE randomization_subjects -->
+	<!-- ( -->
+	<!-- study_subject_id integer NOT NULL, -->
+	<!-- arm integer NOT NULL, -->
+	<!-- stratification_var_values character varying, -->
+	<!-- date_inserted timestamp without time zone, -->
+	<!-- owner_id integer, -->
+	<!-- id serial NOT NULL, -->
+	<!-- CONSTRAINT randomization_subjects_pkey PRIMARY KEY (id), -->
+
+	<!-- ) -->
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-8"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="randomization_subjects" />
+			</not>
+		</preConditions>
+		<comment>Create a table named randomization_subjects</comment>
+		<createTable tableName="randomization_subjects">
+			<column autoIncrement="true" name="id" type="int">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+			<column name="study_subject_id" type="int">
+				<constraints nullable="false" />
+			</column>
+			<column name="arm" type="int">
+				<constraints nullable="false" />
+			</column>
+			<column name="stratification_var_values" type="VARCHAR" />
+			<column name="date_inserted" type="java.sql.Types.TIMESTAMP" />
+			<column name="owner_id" type="INT" />
+
+		</createTable>
+	</changeSet>
+
+	<!-- CONSTRAINT fk_arm_fk_arm FOREIGN KEY (arm) -->
+	<!-- REFERENCES randomization_arms (arm) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION, -->
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-9"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists
+					foreignKeyName="fk_arm_fk_arm" />
+			</not>
+		</preConditions>
+		<comment>Add foreign Key for arm column</comment>
+		<addForeignKeyConstraint constraintName="fk_arm_fk_arm"
+			deferrable="false" initiallyDeferred="false" onDelete="RESTRICT"
+			onUpdate="RESTRICT" baseColumnNames="arm" baseTableName="randomization_subjects"
+			referencedTableName="randomization_arms" referencedColumnNames="arm" />
+	</changeSet>
+
+
+	<!-- CONSTRAINT fk_study_subject_id_fk_study_subject_id FOREIGN KEY (study_subject_id) -->
+	<!-- REFERENCES study_subject (study_subject_id) MATCH SIMPLE -->
+	<!-- ON UPDATE NO ACTION ON DELETE NO ACTION -->
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-10"
+		dbms="postgresql">
+		<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT 1 FROM pg_constraint WHERE conname = 'fk_study_subject_id_fk_study_subject_id'</sqlCheck>
+   		 </preConditions>
+		<comment>Add foreign Key for study_subject_id column</comment>
+		<sql splitStatements="false">
+			ALTER TABLE randomization_subjects ADD CONSTRAINT fk_study_subject_id_fk_study_subject_id FOREIGN KEY (study_subject_id)
+			REFERENCES study_subject (study_subject_id) MATCH SIMPLE
+	 		ON UPDATE NO ACTION ON DELETE NO ACTION;
+		</sql>
+	</changeSet>
+
+
+	<changeSet author="luca.magnotta" id="2017-02-23-randomization-01-11"
+		dbms="postgresql">
+		        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from group_class_types where group_class_type_id=5</sqlCheck>
+        </preConditions>
+		<comment>Adding value 'randomize arm' for group_class_types </comment>
+		<insert tableName="group_class_types">
+			<column name="name" value="Randomized Arm" />
+			<column name="group_class_type_id" value="5" />
+		</insert>
+		<rollback>
+			<sql></sql>
+		</rollback>
+	</changeSet>
+
+
+
+</databaseChangeLog>

@@ -47,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
          return (StudySubjectCustomLabelBean) query.uniqueResult();
  	}
      
-     @Transactional
+    @Transactional
  	public void incrementStudyLabelCounter(int studyId) {
  		String query = "UPDATE study_subject_custom_label SET study_label_counter = study_label_counter + 1 WHERE study_id = "+studyId+" ";
  		getCurrentSession().createSQLQuery(query).executeUpdate();

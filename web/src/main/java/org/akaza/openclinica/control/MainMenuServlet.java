@@ -10,9 +10,11 @@ package org.akaza.openclinica.control;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Locale;
 
 import org.akaza.openclinica.bean.login.UserAccountBean;
+import org.akaza.openclinica.bean.managestudy.StudyGroupClassBean;
 import org.akaza.openclinica.bean.service.StudyParameterValueBean;
 import org.akaza.openclinica.control.admin.EventStatusStatisticsTableFactory;
 import org.akaza.openclinica.control.admin.SiteStatisticsTableFactory;
@@ -20,6 +22,7 @@ import org.akaza.openclinica.control.admin.StudyStatisticsTableFactory;
 import org.akaza.openclinica.control.admin.StudySubjectStatusStatisticsTableFactory;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
+import org.akaza.openclinica.control.randomization.RandomizationStatusStatisticsTableFactory;
 import org.akaza.openclinica.control.submit.ListStudySubjectTableFactory;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
@@ -64,6 +67,9 @@ public class MainMenuServlet extends SecureController {
     private StudyGroupDAO studyGroupDAO;
     private DiscrepancyNoteDAO discrepancyNoteDAO;
     private StudyParameterValueDAO studyParameterValueDAO;
+    //+DR added by DataRiver (EC) 28/11/2017
+	private RandomizationStatusStatisticsTableFactory randomizationStatusStatisticsTableFactory;
+	//+DR end added by DataRiver (EC) 28/11/2017
 
     // < ResourceBundle respage;
 
@@ -204,6 +210,19 @@ System.out.println("is ub a ldapuser??"+ub.isLdapUser());
                     setupStudySubjectStatusStatisticsTable();
                     if (currentStudy.getParentStudyId() == 0) {
                         setupStudyStatisticsTable();
+                        
+                        //+DR added by DataRiver (EC) 28/11/2017
+                        studyGroupClassDAO = getStudyGroupClassDAO();
+                        ArrayList list = studyGroupClassDAO.findAllRandomizedByStudy(currentStudy);
+                        Iterator i = list.iterator();
+                        int sgCount = 0;
+                        while(i.hasNext()){
+                        	StudyGroupClassBean sgcb = (StudyGroupClassBean) i.next();
+                        	setupRandomizationStatusStatisticsTable(sgcb, sgCount);
+                        	sgCount++;
+                        }
+                        //+DR end added by DataRiver (EC) 28/11/2017             
+                        
                     }
 
                 }
@@ -366,5 +385,24 @@ System.out.println("is ub a ldapuser??"+ub.isLdapUser());
     public SDVUtil getSDVUtil() {
         return (SDVUtil) SpringServletAccess.getApplicationContext(context).getBean("sdvUtil");
     }
+    
+    /**
+     * @author DataRiver (EC) 28/11/2017
+     */
+    private void setupRandomizationStatusStatisticsTable(StudyGroupClassBean studyGroupClassBean, int i) {
 
+        RandomizationStatusStatisticsTableFactory factory = getRandomizationStatusStatisticsTableFactory();
+        factory.setStudyGroupClassBean(studyGroupClassBean);
+        factory.setStudyGroupDao(getStudyGroupDAO());
+
+        String randomizationStatusStatistics = factory.createTable(request, response).render();
+        request.setAttribute("randomizationStatusStatistics" + i, randomizationStatusStatistics);
+    }
+    
+    //+DR added by DataRiver (EC) 28/11/2017
+    private RandomizationStatusStatisticsTableFactory getRandomizationStatusStatisticsTableFactory() {
+    	randomizationStatusStatisticsTableFactory = this.randomizationStatusStatisticsTableFactory != null ? randomizationStatusStatisticsTableFactory : (RandomizationStatusStatisticsTableFactory) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationStatusStatisticsTableFactory");
+		return randomizationStatusStatisticsTableFactory;
+	}
+    //+DR end added by DataRiver (EC) 28/11/2017
 }

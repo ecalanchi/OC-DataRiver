@@ -28,9 +28,16 @@ public class GroupClassType extends Term {
     public static final GroupClassType DEMOGRAPHIC = new GroupClassType(3, "Demographic");
 
     public static final GroupClassType OTHER = new GroupClassType(4, "Other");
-
-    private static final GroupClassType[] members = { ARM, FAMILY, DEMOGRAPHIC, OTHER };
-
+    
+    //+DR added by DataRiver 28/11/2017
+    public static final GroupClassType RANDOMIZED = new GroupClassType(5, "Randomized_Arm");
+    //+DR end added by DataRiver 28/11/2017
+    
+    //+DR modified by DataRiver 28/11/2017
+    //private static final GroupClassType[] members = { ARM, FAMILY, DEMOGRAPHIC, OTHER };
+    private static final GroupClassType[] members = { ARM, FAMILY, DEMOGRAPHIC, OTHER, RANDOMIZED };
+    //+DR end modified by DataRiver 28/11/2017
+    
     public static final List list = Arrays.asList(members);
 
     private GroupClassType(int id, String name) {

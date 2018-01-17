@@ -9,6 +9,7 @@ package org.akaza.openclinica.control.submit;
 
 import java.io.File;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import javax.servlet.ServletConfig;
@@ -78,12 +80,17 @@ import org.akaza.openclinica.control.form.ScoreItemValidator;
 import org.akaza.openclinica.control.form.Validation;
 import org.akaza.openclinica.control.form.Validator;
 import org.akaza.openclinica.control.managestudy.ViewNotesServlet;
+import org.akaza.openclinica.control.randomization.AssignRandomization;
 import org.akaza.openclinica.core.SecurityManager;
 import org.akaza.openclinica.core.SessionManager;
 import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.admin.AuditDAO;
 import org.akaza.openclinica.dao.admin.CRFDAO;
 import org.akaza.openclinica.dao.hibernate.DynamicsItemFormMetadataDao;
+import org.akaza.openclinica.dao.hibernate.datariver.RandomizationArmsDao;
+import org.akaza.openclinica.dao.hibernate.datariver.RandomizationCustomDao;
+import org.akaza.openclinica.dao.hibernate.datariver.RandomizationSubjectsDao;
+import org.akaza.openclinica.dao.hibernate.datariver.RandomizationVarDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.DiscrepancyNoteDAO;
 import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
@@ -101,6 +108,7 @@ import org.akaza.openclinica.dao.submit.ItemGroupMetadataDAO;
 import org.akaza.openclinica.dao.submit.SectionDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
 import org.akaza.openclinica.domain.crfdata.DynamicsItemFormMetadataBean;
+import org.akaza.openclinica.domain.datariver.DatariverEmailBean;
 import org.akaza.openclinica.domain.rule.RuleSetBean;
 import org.akaza.openclinica.domain.rule.action.RuleActionRunBean.Phase;
 import org.akaza.openclinica.exception.OpenClinicaException;
@@ -243,7 +251,32 @@ public abstract class DataEntryServlet extends CoreSecureController {
     private DataSource dataSource;
 
 
+    //+DR added by DataRiver (EC) 28/11/2017 
+    private RandomizationVarDao randomizationVarDao;
+    private RandomizationArmsDao randomizationArmsDao;
+    private RandomizationSubjectsDao randomizationSubjectsDao;
+    private RandomizationCustomDao randomizationCustomDao;
 
+    public RandomizationVarDao getRandomizationVarDao() {
+    	randomizationVarDao = this.randomizationVarDao != null ? randomizationVarDao : (RandomizationVarDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationVarDao");
+        return randomizationVarDao;
+	}
+
+	public RandomizationArmsDao getRandomizationArmsDao() {
+		randomizationArmsDao = this.randomizationArmsDao != null ? randomizationArmsDao : (RandomizationArmsDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationArmsDao");
+		return randomizationArmsDao;
+	}
+
+	public RandomizationSubjectsDao getRandomizationSubjectsDao() {
+		randomizationSubjectsDao = this.randomizationSubjectsDao != null ? randomizationSubjectsDao : (RandomizationSubjectsDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationSubjectsDao");
+		return randomizationSubjectsDao;
+	}
+
+	public RandomizationCustomDao getRandomizationCustomDao() {
+		randomizationCustomDao = this.randomizationCustomDao != null ? randomizationCustomDao : (RandomizationCustomDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationCustomDao");
+		return randomizationCustomDao;
+	}
+	//+DR added by DataRiver (EC) 28/11/2017 
 
 
 
@@ -1902,6 +1935,132 @@ public abstract class DataEntryServlet extends CoreSecureController {
                         LOGGER.debug("need to mark CRF as complete");
                         markSuccessfully = markCRFComplete(request);
                         LOGGER.debug("...marked CRF as complete: " + markSuccessfully);
+                        
+                        
+                        
+                        
+                        //+DR added by DataRiver (EC) 28/11/2017
+                        if (markSuccessfully) {
+                       	
+                        	String subjectRandomizedArms = "";
+                        	String subjectRandomizedArmsIds = "";
+                            String allocationKey;
+                            if (study.getParentStudyId() > 0) {
+                                // this is a site, find parent
+                                StudyBean parentStudy = (StudyBean) studydao.findByPK(study.getParentStudyId());
+                                allocationKey = parentStudy.getAllocationKey();
+                            } else {
+                            	allocationKey = study.getAllocationKey();
+                            }
+                            
+                            CRFDAO cdao = new CRFDAO(getDataSource());
+                            CRFBean crfBean = (CRFBean) cdao.findByPK(crfVersionBean.getCrfId());
+                            Boolean randomError = false;
+                                                
+                            //is study randomized?
+                            if (allocationKey.equals("randomized")) {
+                            	//System.out.println("##### allocation key: " + allocationKey);
+                            	AssignRandomization assignRandomization = new AssignRandomization(sm, ecb,getRandomizationVarDao(),getRandomizationArmsDao(),getRandomizationSubjectsDao(), getRandomizationCustomDao());
+                                Boolean randomized = false;
+                                randomized = assignRandomization.randomizeSubject();
+                                if (randomized){
+                                    ArrayList al = assignRandomization.getRandomizationArmsName();
+                                    ArrayList alids = assignRandomization.getSubjectRandomizationArmsValue(); 
+                                    //System.out.println(al.get(0));
+                                    Iterator iterator = al.iterator();
+                                    Iterator iteratorIds = alids.iterator();
+                                    
+                                    //list of randomization arm names assigned to this subject on current event (usually there's a SINGLE randomization at each event)
+                                    while (iterator.hasNext()){
+                                    	subjectRandomizedArms = subjectRandomizedArms + iterator.next();
+                                    	if (iterator.hasNext()){
+                                    		subjectRandomizedArms = subjectRandomizedArms + ", ";
+                                    	}
+                                    }
+                                    
+                                    //list of randomization arms Ids (study_group_ids) assigned to this subject on current event (matching previous randomization arm names)
+                                    while (iteratorIds.hasNext()){
+                                    	subjectRandomizedArmsIds = subjectRandomizedArmsIds + iteratorIds.next();
+                                    	if (iteratorIds.hasNext()){
+                                    		subjectRandomizedArmsIds = subjectRandomizedArmsIds + ", ";
+                                    	}
+                                    }
+                                    
+                                    addPageMessage(MessageFormat.format(respage.getString("subject_randomized"), ssb.getLabel(), subjectRandomizedArms),request);                
+        							                       
+                                } else {
+                                	if (allocationKey.equals("randomized") && getRandomizationVarDao().toBeRandomized(studyEventDefinition.getId(), crfBean.getId())) {
+                                		addPageMessage(MessageFormat.format(respage.getString("subject_not_randomized"),""), request);
+                                	}
+//                                    request.setAttribute(BEAN_DISPLAY, section);
+//                                    request.setAttribute(BEAN_ANNOTATIONS, fp.getString(INPUT_ANNOTATIONS));
+//                                    setUpPanel(section);
+//                                    forwardPage(getJSPPage());
+//                                    return;
+                                    
+                                }
+                            }
+                            
+                            //+DR added by DataRiver (EC) 28/11/2017
+                            //send email if crf_id is in table datariver_email_crf
+                            String body = "";
+                            String emailSubject = "";
+                            
+                            ArrayList<DatariverEmailBean> emailArray = getDatariverEmailDao().getDatariverEmail(crfBean.getId(), edcBean.getId());
+                            if (!emailArray.isEmpty()){
+	                            Iterator i = emailArray.iterator();
+	
+	                            while(i.hasNext()){
+	                            	DatariverEmailBean deb = (DatariverEmailBean) i.next();
+	                            	Boolean mailToBeSent = true; 
+	                            	
+	                            	//check StudyGroupId
+	                            	if (deb.getStudyGroupId() != null && Boolean.FALSE.equals(checkInRandomizationArmList(deb.getStudyGroupId(), subjectRandomizedArmsIds))){
+	                        			//DatariverEmailBean specify a StudyGroupId that is different from subject's randomizationArm(s): don't send email.
+	                        			mailToBeSent = false; 	                          		
+	                            	}
+	                            	
+	                            	//check StudyId
+	                            	if (deb.getStudyId() != null && deb.getStudyId() != currentStudy.getId()){
+	                            		//DatariverEmailBean specify a Site Id (StudyId) that is different from subject's current Study Id: don't send email.
+	                            		mailToBeSent = false; 
+	                            	}
+	                            	
+	                            	//send email after checks
+	                            	if (mailToBeSent){
+	                            		Boolean messageSent = false;
+
+	                            		body = deb.getHtmlBody();
+		                                body = setEmailParameters(body, ecb, crfVersionBean, crfBean, studyEventDefinition, studyEventBean, currentStudy, ssb, ub, subjectRandomizedArms);
+		                                
+	                            		emailSubject = deb.getSubject();
+	                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, crfBean, studyEventDefinition, studyEventBean, currentStudy, ssb, ub, subjectRandomizedArms);
+		                                	                            	                                		                                	                                
+		                                String recipients = ub.getEmail() == "" ? deb.getRecipients().trim() : ub.getEmail().trim() + ", " + deb.getRecipients().trim();
+
+	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath());                              
+		                    			
+		                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+		                    	    	logDatariverEmail(
+		                    		    		messageSent ? "sent" : "failed", 
+		                    		    		body, 
+		                    		    		deb.getEmailId(), 
+		                    		    		deb.getEmailTypeId(), 
+		                    		    		emailSubject, 
+		                    		    		recipients, 
+		                    		    		deb.getSender(), 
+		                    		    		deb.getBcc(), 
+		                    		    		ub, 
+		                    		    		currentStudy.getAbbreviatedName());	
+		                    			
+	                            	}
+	                            } //end while                           
+                            } //end if
+                           
+                        }
+                        //+DR end added by DataRiver (EC) 28/11/2017
+                        
+                        
                         if (!markSuccessfully) {
                             request.setAttribute(BEAN_DISPLAY, section);
                             request.setAttribute(BEAN_ANNOTATIONS, fp.getString(INPUT_ANNOTATIONS));
@@ -5716,5 +5875,42 @@ String tempKey = idb.getItemId()+","+idb.getOrdinal();
         if(nonRepOri != null && nonRepOri.size()>0) {
             ins.itemsInstantUpdate(section.getDisplayItemGroups(), nonRepOri);
         }
+    }
+    
+    /**
+     * Put in ArrayList<Integer> the randomization arms of current subject.
+     * Even if it's possible that a subject is randomized in two different "randomization set" at the same moment,
+     * This list will be mostly empty (subject non randomized) or it will contain only one item if subject has been randomized at this point.
+     * 
+     * @author DataRiver (EC) 28/11/2017
+     * @param randomizationArms String with randomization arms (StudyGroupId) separated by commas
+     * @return ArrayList of StudyGroupIds
+     */
+    private ArrayList<Integer> randomizationArmsIdTokenizer(String randomizationArms){
+		ArrayList<Integer> list = new ArrayList<Integer>();
+	    StringTokenizer st = new StringTokenizer(randomizationArms, ",");
+	    while (st.hasMoreTokens()) {
+	        list.add(Integer.parseInt(st.nextToken()));
+	    }
+	    return list;
+    }
+    
+    /**
+     * Return true if studyGroupId is in randomizationArms (list of StudyGroupId separated by commas)
+     * 
+     * @author DataRiver (EC) 28/11/2017
+     * @param studyGroupId
+     * @param randomizationArms
+     * @return
+     */
+    private Boolean checkInRandomizationArmList(Integer studyGroupId, String randomizationArms){
+    	ArrayList<Integer> randomizationArmAL= randomizationArmsIdTokenizer(randomizationArms);
+    	Iterator i = randomizationArmAL.iterator();
+    	while (i.hasNext()){
+    		if (i.next().equals(studyGroupId)){
+    			return true;
+    		}
+    	}
+    	return false;
     }
 }

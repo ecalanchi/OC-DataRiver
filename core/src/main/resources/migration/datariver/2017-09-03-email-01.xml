@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+	
+  <changeSet author="enrico.calanchi" id="2017-09-03-email-01_1" dbms="postgresql">
+	<preConditions onFail="MARK_RAN">
+		<not><tableExists tableName="datariver_email_type" /></not>
+	</preConditions>
+ 	<comment>Added DataRiver Email Type</comment>
+         <createTable tableName="datariver_email_type">
+     		<column name="email_type_id" type="int">
+                 <constraints nullable="false" primaryKey="true"/>
+             </column>
+             <column name="description" type="varchar"/>                     
+         </createTable> 
+	 </changeSet>
+	 
+   <changeSet author="enrico.calanchi" id="2017-09-03-email-01_2" dbms="postgresql">
+	<preConditions onFail="MARK_RAN">
+		<not><tableExists tableName="datariver_email_log" /></not>
+	</preConditions>
+     <comment>Added DataRiver Email Log</comment>    
+         <createTable tableName="datariver_email_log">
+     		<column autoIncrement="true" name="email_log_id" type="int">
+                 <constraints nullable="false" primaryKey="true"/>
+             </column>
+            	<column name="user_id" type="int"/>
+ 			<column name="date_sent" type="timestamp"/>
+ 			<column name="delivery_status" type="varchar"/>
+ 			<column name="html_body_filepath" type="varchar"/>
+ 			<column name="email_id" type=" int"/>
+ 			<column name="email_type_id" type=" int"/>
+ 			<column name="subject" type="varchar"/>
+ 			<column name="recipients" type="varchar"/>
+ 			<column name="sender" type="varchar"/>
+ 			<column name="bcc" type="varchar"/>
+     	</createTable> 
+	</changeSet>
+	
+	<changeSet author="enrico.calanchi" id="2017-09-03-email-01_3" dbms="postgresql">
+	<preConditions onFail="MARK_RAN">
+		<not><tableExists tableName="datariver_email" /></not>
+	</preConditions>	
+     <comment>Create table datariver_email</comment> 
+	 
+         <createTable tableName="datariver_email">
+     		<column autoIncrement="true" name="email_id" type="int">
+                 <constraints nullable="false" primaryKey="true"/>
+             </column>
+ 			<column name="subject" type="varchar"/>
+ 			<column name="recipients" type="varchar"/>
+ 			<column name="html_body" type=" varchar"/>
+ 			<column name="email_type_id" type=" int"/>
+ 			<column name="sender" type="varchar"><constraints nullable="false"/></column>
+ 			<column name="bcc" type="varchar"/>
+			<column name="reply_to" type="varchar"/>
+			<column name="attachment_path" type="varchar"/>
+			<column name="study_id" type="int"/>
+			<column name="event_definition_crf_id" type="int"/>
+			<column name="crf_id" type="int"/>
+			<column name="study_group_id" type="int"/>
+			<column name="enabled" type="boolean"/>
+     	</createTable> 
+		
+         <addForeignKeyConstraint baseColumnNames="email_type_id"
+                                  baseTableName="datariver_email"
+                                  constraintName="fk_datariver_email_email_type_id"
+                                  referencedColumnNames="email_type_id"
+                                  referencedTableName="datariver_email_type"/>
+         <addForeignKeyConstraint baseColumnNames="study_id"
+                                  baseTableName="datariver_email"
+                                  constraintName="fk_datariver_email_study_id"
+                                  referencedColumnNames="study_id"
+                                  referencedTableName="study"/>
+         <addForeignKeyConstraint baseColumnNames="event_definition_crf_id"
+                                  baseTableName="datariver_email"
+                                  constraintName="fk_datariver_email_event_definition_crf_id"
+                                  referencedColumnNames="event_definition_crf_id"
+                                  referencedTableName="event_definition_crf"/>
+ 		<addForeignKeyConstraint baseColumnNames="crf_id"
+                                  baseTableName="datariver_email"
+                                  constraintName="fk_datariver_email_crf_id"
+                                  referencedColumnNames="crf_id"
+                                  referencedTableName="crf"/>
+         <addForeignKeyConstraint baseColumnNames="study_group_id"
+                                  baseTableName="datariver_email"
+                                  constraintName="fk_datariver_email_study_group_id"
+                                  referencedColumnNames="study_group_id"
+                                  referencedTableName="study_group"/>
+	</changeSet>
+	
+	<changeSet author="enrico.calanchi" id="2017-09-03-email-01_4" dbms="postgresql">	
+	<preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from datariver_email_type</sqlCheck>
+        </preConditions>
+ 	<comment>Insert new records in the datariver_email_type table</comment>
+         <insert tableName="datariver_email_type">
+             <column name="email_type_id" valueNumeric="0"/>
+             <column name="description" value="crf marked complete"/>
+         </insert>
+         <insert tableName="datariver_email_type">
+             <column name="email_type_id" valueNumeric="1"/>
+             <column name="description" value="enrollment disable"/>
+         </insert>
+         <insert tableName="datariver_email_type">
+             <column name="email_type_id" valueNumeric="2"/>
+             <column name="description" value="enrollment enable"/>
+         </insert>
+         <insert tableName="datariver_email_type">
+             <column name="email_type_id" valueNumeric="3"/>
+             <column name="description" value="New user and password"/>
+         </insert>
+         <insert tableName="datariver_email_type">
+             <column name="email_type_id" valueNumeric="4"/>
+             <column name="description" value="New user notice"/>
+         </insert>
+	</changeSet>
+ </databaseChangeLog>

@@ -382,7 +382,8 @@ public class AddNewSubjectServlet extends SecureController {
                         resexception.getString("person_id_can_not_contain_html_lessthan_or_greaterthan_elements"));
             }
 
-            if (!label.equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
+            //+DR modified by DataRiver (EC) 28/11/2017
+            //if (!label.equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
                 StudySubjectBean subjectWithSameLabel = ssd.findByLabelAndStudy(label, currentStudy);
 
                 StudySubjectBean subjectWithSameLabelInParent = new StudySubjectBean();
@@ -405,7 +406,8 @@ public class AddNewSubjectServlet extends SecureController {
                 if (subjectWithSameLabel.isActive() || subjectWithSameLabelInParent.isActive()) {
                     Validator.addError(errors, INPUT_LABEL, resexception.getString("another_assigned_this_ID_choose_unique"));
                 }
-            }
+            //}
+            //+DR end modified by DataRiver (EC) 28/11/2017
 
             if (!classes.isEmpty()) {
                 for (int i = 0; i < classes.size(); i++) {

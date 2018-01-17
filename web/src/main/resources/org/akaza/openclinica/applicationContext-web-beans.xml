@@ -19,6 +19,12 @@
     <bean id="sdvUtil" class="org.akaza.openclinica.web.table.sdv.SDVUtil"  name="sdvUtil">
         <property name="dataSource" ref="dataSource"/>
     </bean>
-
+    
+    <!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+    <bean id="randomizationStatusStatisticsTableFactory" class="org.akaza.openclinica.control.randomization.RandomizationStatusStatisticsTableFactory">
+    	<property name="randomizationArmsDao" ref="randomizationArmsDao"></property>
+    	<property name="randomizationSubjectsDao" ref="randomizationSubjectsDao"></property>
+    </bean>
+	<!-- //+DR end added by DataRiver (EC) 28/11/2017 -->
    
 </beans>

@@ -34,7 +34,9 @@
 
     jQuery(document).ready(function() {
         jQuery('#addSubject').click(function() {
-			jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", top:"10px" } });
+        	//+DR modified by DataRiver (EC) 28/11/2017
+			jQuery.blockUI({ message: jQuery('#addSubjectForm'), css:{left: "300px", width: "500px", top:"10px" } });
+			//+DR end modified by DataRiver (EC) 28/11/2017
         });
 
         jQuery('#cancel').click(function() {

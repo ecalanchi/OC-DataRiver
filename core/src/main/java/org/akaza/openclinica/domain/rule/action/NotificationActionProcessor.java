@@ -202,23 +202,30 @@ public class NotificationActionProcessor implements ActionProcessor, Runnable {
 		String eventName = getStudyEventDefnBean(sed_Id).getName();
 		if (eventOrdinal != 1)
 			eventName = eventName + "(" + eventOrdinal + ")";
+		
+		//+DR modified by DataRiver (EC) 28/11/2017
+		StudySubjectBean ssBean = (StudySubjectBean) ssdao.findByPK(studySubjectBeanId);
 
+		String subjectLabel = ssBean.getLabel();
 		String studyName = getStudyBean(studyId).getName();
 		if (message==null) message="";
         if (emailSubject==null) emailSubject="";
 		message = message.replaceAll("\\$\\{event.name}", eventName);
 		message = message.replaceAll("\\$\\{study.name}", studyName);
+		message = message.replaceAll("\\$\\{study.subject}", subjectLabel);
 		emailSubject = emailSubject.replaceAll("\\$\\{event.name}", eventName);
 		emailSubject = emailSubject.replaceAll("\\$\\{study.name}", studyName);
+		emailSubject = emailSubject.replaceAll("\\$\\{study.subject}", subjectLabel);
 
 		ParticipantDTO pDTO = null;
 		StudyBean studyBean = getStudyBean(studyId);
 		String[] listOfEmails = emailList.split(",");
-		StudySubjectBean ssBean = (StudySubjectBean) ssdao.findByPK(studySubjectBeanId);
+		//StudySubjectBean ssBean = (StudySubjectBean) ssdao.findByPK(studySubjectBeanId);
 		StudyBean parentStudyBean = getParentStudy(ds, studyBean);
 		String pUserName = parentStudyBean.getOid() + "." + ssBean.getOid();
 		UserAccountBean uBean = (UserAccountBean) udao.findByUserName(pUserName);
-
+		//+DR end modified by DataRiver (EC) 28/11/2017
+		
 		StudyParameterValueBean pStatus = spvdao.findByHandleAndStudy(studyBean.getId(), "participantPortal");
 		String participateStatus = pStatus.getValue().toString(); // enabled , disabled
 

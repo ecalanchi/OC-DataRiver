@@ -289,5 +289,36 @@ public class StudyGroupClassDAO extends AuditableEntityDAO {
 
         return al;
     }
+    
+    /**
+     * Added by DataRiver (EC) 28/11/2017
+     * @param study
+     * @return
+     */
+    public ArrayList findAllRandomizedByStudy(StudyBean study) {
+        ArrayList answer = new ArrayList();
+
+        this.setTypesExpected();
+        this.setTypeExpected(11, TypeNames.STRING);
+        this.setTypeExpected(12, TypeNames.STRING);
+
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(study.getId()));
+        variables.put(new Integer(2), new Integer(study.getId()));
+
+        ArrayList alist = this.select(digester.getQuery("findAllRandomizedByStudy"), variables);
+
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+            HashMap hm = (HashMap) it.next();
+            StudyGroupClassBean group = (StudyGroupClassBean) this.getEntityFromHashMap(hm);
+            group.setStudyName((String) hm.get("study_name"));
+            logger.info("study Name" + group.getStudyName());
+            group.setGroupClassTypeName((String) hm.get("type_name"));
+            answer.add(group);
+        }
+
+        return answer;
+    }
 
 }

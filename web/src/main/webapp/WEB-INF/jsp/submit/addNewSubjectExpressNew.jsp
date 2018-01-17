@@ -69,8 +69,9 @@
 	</c:if>
 </c:forEach>
 
-
-<form name="subjectForm" action="AddNewSubject" method="post">
+<%-- //+DR modified by DataRiver (EC) 28/11/2017 --%>
+<form name="subjectForm" action="AddNewSubject" method="post" onsubmit="addSubject.disabled = true;">
+<%-- //+DR end modified by DataRiver (EC) 28/11/2017 --%>
 <input type="hidden" name="subjectOverlay" value="true">
 
 <div style="width: 500px; height: 550px; overflow: scroll; background:#FFFFFF; cursor:default">
@@ -90,7 +91,9 @@
                     <td valign="top"><div class="formfieldXL_BG">
                     <c:choose>
                      <c:when test="${study.studyParameterConfig.subjectIdGeneration =='auto non-editable'}">
-                      <input onfocus="this.select()" type="text" value="<c:out value="${label}"/>" size="45" class="formfield" disabled>
+                     <!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+                      <input onfocus="this.select()" type="text" value="<c:out value="${label}"/>" size="45" class="formfieldXL" disabled>
+                     <!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
                       <input type="hidden" name="label" value="<c:out value="${label}"/>">
                      </c:when>
                      <c:otherwise>
@@ -275,12 +278,16 @@
   </c:otherwise>
  </c:choose>
 <c:if test="${(!empty studyGroupClasses)}">
-    <tr valign="top">
+<!-- //+DR modified by DataRiver (EC) 28/11/2017 -->
+    <tr id="studyGroupClassRow" valign="top">
       <td class="formlabel"><fmt:message key="subject_group_class" bundle="${resword}"/>:
       <td class="table_cell">
       <c:set var="count" value="0"/>
+      <c:set var="countView" value="0"/>
       <table border="0" cellpadding="0">
         <c:forEach var="group" items="${studyGroupClasses}">
+        
+        <c:if test="${group.groupClassTypeId != 5}">  
         <tr valign="top">
          <td><b><c:out value="${group.name}"/></b></td>
          <td><div class="formfieldM_BG">
@@ -297,11 +304,21 @@
                 <td align="left">*</td>
               </c:if>
               </tr>
-             <c:set var="count" value="${count+1}"/>
+              <c:set var="countView" value="${countView+1}"/>
+		</c:if>
+		
+		<c:set var="count" value="${count+1}"/>
+        
         </c:forEach>
         </table>
       </td>
     </tr>
+    
+        <c:if test="${countView==0}">
+        	<script type="text/javascript">document.getElementById("studyGroupClassRow").style.display = 'none';</script>
+		</c:if>
+		<!-- //+DR end modified by DataRiver (EC) 28/11/2017 -->
+		
 </c:if>
 
     <tr valign="top">
