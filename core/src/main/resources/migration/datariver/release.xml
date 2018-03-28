@@ -6,4 +6,5 @@
 	<include file="migration/datariver/2017-02-23-randomization-01.xml" />
 	<include file="migration/datariver/2017-09-03-email-01.xml" />
 	<include file="migration/datariver/2017-09-03-email-02.xml" />
+	<include file="migration/datariver/2018-01-19-custom_label-02.xml"/>	
 </databaseChangeLog>

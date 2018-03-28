@@ -744,7 +744,7 @@ public class AddNewSubjectServlet extends SecureController {
                     if (fp.getString(INPUT_LABEL).equalsIgnoreCase(resword.getString("id_generated_Save_Add"))) {
                         synchronized (simpleLockObj) {
                         	if (getStudySubjectCustomLabelDao().getByStudyId(parentStudyId) != null){
-                        		//DataRiver custom label
+                        		//DataRiver custom label (PARENT STUDY)
     	                    	String nextCode = "" + (getStudySubjectCustomLabelDao().getByStudyId(parentStudyId).getStudyLabelCounter() + 1);
     	                    	//add as many zeros as needed to achieve the required fixed length (max 6 digits)
     	                    	//set label_code_length to 0 in study_subject_custom_label table if you don't want a fixed length code

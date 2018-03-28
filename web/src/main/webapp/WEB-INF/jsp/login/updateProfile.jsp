@@ -147,5 +147,10 @@
 </div>
 <input type="submit" name="Submit" value="<fmt:message key="confirm_profile_changes" bundle="${resword}"/>" class="button_long">
 <input type="button" onclick="confirmCancel('MainMenu');"  name="cancel" value="   <fmt:message key="cancel" bundle="${resword}"/>   " class="button_medium"/>
+<%-- //+DR added by DataRiver (EC) 27/03/2018 --%>
+<c:if test="${userBean.sysAdmin && userBean.name == 'root'}">
+	<input type="submit" name="SendTestEmail" value="<fmt:message key="send_test_email" bundle="${resword}"/>" class="button_long">
+</c:if>
+<%-- //+DR end added by DataRiver (EC) 27/03/2018 --%>
 </form>
 <jsp:include page="../include/footer.jsp"/>

@@ -9,7 +9,6 @@ package org.akaza.openclinica.control.login;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +24,7 @@ import org.akaza.openclinica.dao.hibernate.ConfigurationDao;
 import org.akaza.openclinica.dao.hibernate.PasswordRequirementsDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
+import org.akaza.openclinica.domain.datariver.DatariverEmailBean;
 import org.akaza.openclinica.i18n.core.LocaleResolver;
 import org.akaza.openclinica.i18n.util.ResourceBundleProvider;
 import org.akaza.openclinica.view.Page;
@@ -58,6 +58,14 @@ public class UpdateProfileServlet extends SecureController {
         UserAccountBean userBean1 = (UserAccountBean) udao.findByUserName(ub.getName());
 
         Collection studies = sdao.findAllByUser(ub.getName());
+        
+    	//+DR added by DataRiver (EC) 27/03/2018 
+        if (request.getParameter("SendTestEmail") != null) {
+        	Boolean messageSent = sendNewTestEmail();        	
+        	addPageMessage(messageSent ? respage.getString("your_message_sent_succesfully") : respage.getString("mail_cannot_be_sent_to_admin"));
+        	forwardPage(Page.UPDATE_PROFILE);
+        } else {
+        //+DR end added by DataRiver (EC) 27/03/2018         
 
         if (StringUtils.isBlank(action)) {
             request.setAttribute("studies", studies);
@@ -78,6 +86,8 @@ public class UpdateProfileServlet extends SecureController {
                 forwardPage(Page.MENU_SERVLET);
             }
         }
+        
+        }//+DR end added by DataRiver (EC) 27/03/2018
 
     }
 
@@ -190,5 +200,42 @@ public class UpdateProfileServlet extends SecureController {
             session.removeAttribute("userBean1");
         }
     }
+    
+	/**
+	 * Send a test email (type_id=5)
+	 * 
+	 * @author DataRiver (EC) 27/03/2018
+	 * @return
+	 */
+	private Boolean sendNewTestEmail() {
+		Boolean messageSent = false;
+		DatariverEmailBean datariverEmail = getDatariverEmailDao().getDatariverEmailTest();
+	    
+		if (datariverEmail != null){
+	    	String email_subject = datariverEmail.getSubject();
+	    	String recipients = ub.getEmail() == "" ? datariverEmail.getRecipients() : ub.getEmail() + ", " + datariverEmail.getRecipients();
+	    	String bcc = datariverEmail.getBcc();
+	    	String body = datariverEmail.getHtmlBody();
+	    	String sender = datariverEmail.getSender();
+		
+	    	messageSent = sendBackgroundEmail(recipients, bcc, sender, email_subject, body, true, datariverEmail.getAttachmentPath());	    	
+			
+	    	//log email with filename [TEST]_[send_email_test]_yyyy-MM-dd_HHmmssS.html
+	    	logDatariverEmail(
+	    		messageSent ? "sent" : "failed", 
+	    		body, 
+	    		datariverEmail.getEmailId(), 
+	    		datariverEmail.getEmailTypeId(), 
+	    		email_subject, 
+	    		recipients, 
+	    		sender, 
+	    		bcc, 
+	    		ub, 
+	    		"TEST");		                                	
+		}
+		
+        return messageSent;
+		
+	}        
 
 }

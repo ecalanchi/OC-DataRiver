@@ -8,10 +8,15 @@
 
 package org.akaza.openclinica.control.core;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -29,9 +34,13 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -70,6 +79,9 @@ import org.akaza.openclinica.dao.core.CoreResources;
 import org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
 import org.akaza.openclinica.dao.hibernate.EventDefinitionCrfTagDao;
 import org.akaza.openclinica.dao.hibernate.UserAccountDao;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailDao;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailLogDao;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailTypeDao;
 import org.akaza.openclinica.dao.hibernate.datariver.StudySubjectCustomLabelDao;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
 import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
@@ -84,6 +96,7 @@ import org.akaza.openclinica.dao.submit.ItemDAO;
 import org.akaza.openclinica.dao.submit.ItemDataDAO;
 import org.akaza.openclinica.domain.datamap.EventDefinitionCrf;
 import org.akaza.openclinica.domain.datamap.EventDefinitionCrfTag;
+import org.akaza.openclinica.domain.datariver.DatariverEmailLogBean;
 import org.akaza.openclinica.domain.user.UserAccount;
 import org.akaza.openclinica.exception.OpenClinicaException;
 import org.akaza.openclinica.i18n.core.LocaleResolver;
@@ -207,6 +220,26 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     public static final String MODULE = "module";// to determine which module
 
     private CRFLocker crfLocker;
+    
+	//+DR added by DataRiver (EC) 27/03/2018 
+	private DatariverEmailDao datariverEmailDao;
+	private DatariverEmailLogDao datariverEmailLogDao;
+	private DatariverEmailTypeDao datariverEmailTypeDao;
+	
+	public DatariverEmailDao getDatariverEmailDao() {
+		datariverEmailDao = this.datariverEmailDao != null ? datariverEmailDao : (DatariverEmailDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("datariverEmailDao");
+        return datariverEmailDao;
+	}
+	public DatariverEmailLogDao getDatariverEmailLogDao() {
+		datariverEmailLogDao = this.datariverEmailLogDao != null ? datariverEmailLogDao : (DatariverEmailLogDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEmailLogDao");
+        return datariverEmailLogDao;
+	}
+	public DatariverEmailTypeDao getDatariverEmailTypeDao() {
+		datariverEmailTypeDao = this.datariverEmailTypeDao != null ? datariverEmailTypeDao : (DatariverEmailTypeDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEmailTypeDao");
+        return datariverEmailTypeDao;
+	}
+	//+DR end added by DataRiver (EC) 27/03/2018 	
+    
     
     //+DR added by DataRiver (EC) 22/02/2017
  	private StudySubjectCustomLabelDao studySubjectCustomLabelDao; 
@@ -990,6 +1023,280 @@ public abstract class SecureController extends HttpServlet implements SingleThre
         return messageSent;
     }
 
+    
+    /**
+     * SC Send email with bcc and attachment
+     * @author DataRiver (EC) 27/03/2018
+     */
+    public Boolean sendEmail(String to, String bcc, String from, String subject, String body, Boolean htmlEmail, String filePathName) throws Exception {
+        return sendEmail(to, bcc, from, subject, body, htmlEmail, filePathName, respage.getString("your_message_sent_succesfully"),
+                respage.getString("mail_cannot_be_sent_to_admin"), true);
+    }
+    
+    /**
+     * SC Send email with bcc and attachment
+     * @author DataRiver (EC) 27/03/2018
+     * 
+     * @param to
+     * @param bcc (optional)
+     * @param from
+     * @param subject
+     * @param body
+     * @param htmlEmail
+     * @param filePathName (optional)
+     * @param successMessage
+     * @param failMessage
+     * @param sendMessage
+     * @return
+     * @throws Exception
+     */
+    public Boolean sendEmail(String to, String bcc, String from, String subject, String body, Boolean htmlEmail, String filePathName, String successMessage, String failMessage,
+            Boolean sendMessage) throws Exception {
+        Boolean messageSent = true;
+        try {
+            JavaMailSenderImpl mailSender = (JavaMailSenderImpl) SpringServletAccess.getApplicationContext(context).getBean("mailSender");
+            Properties javaMailProperties = mailSender.getJavaMailProperties();
+            if(null != javaMailProperties){
+            	if (javaMailProperties.get("mail.smtp.localhost") == null || ((String)javaMailProperties.get("mail.smtp.localhost")).equalsIgnoreCase("") ){
+            		javaMailProperties.put("mail.smtp.localhost", "localhost");
+            	}
+            }
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, htmlEmail);
+            helper.setFrom(from);
+            helper.setTo(processMultipleImailAddresses(to.trim()));
+            helper.setBcc(processMultipleImailAddresses(bcc.trim()));
+            helper.setSubject(subject);
+            
+			if (filePathName != null && !filePathName.isEmpty() && new File(filePathName).exists()){
+				File f = new File(filePathName);
+				String absoluteFilePath = f.getAbsolutePath();
+				String fileName = f.getName();
+				
+				// Create the message part 
+				MimeBodyPart messageBodyPart = new MimeBodyPart();		  
+				messageBodyPart.setText(body, "ISO-8859-15", "html");
+				MimeMultipart multipart = new MimeMultipart();
+				multipart.addBodyPart(messageBodyPart);
+				  
+				// Part two is attachment
+				messageBodyPart = new MimeBodyPart();
+				if (absoluteFilePath!=null && fileName !=null){
+					FileDataSource source = new FileDataSource(absoluteFilePath);
+					messageBodyPart.setDataHandler(new DataHandler(source));
+					messageBodyPart.setFileName(fileName);
+				}
+				  
+				multipart.addBodyPart(messageBodyPart);
+				
+				// Put parts in message
+				mimeMessage.setContent(multipart);
+				mimeMessage.saveChanges();
+				
+			} else {
+				helper.setText(body, true);
+			}
+
+            mailSender.send(mimeMessage);
+            if (successMessage != null && sendMessage) {
+                addPageMessage(successMessage);
+            }
+            logger.debug("Email sent successfully on {}", new Date());
+        } catch (MailException me) {
+            me.printStackTrace();
+            if (failMessage != null && sendMessage) {
+                addPageMessage(failMessage);
+            }
+            logger.debug("Email could not be sent on {} due to: {}", new Date(), me.toString());
+            messageSent = false;
+        }
+        return messageSent;
+    }
+    
+    /**
+     * SC Send email with reply-to
+     * @author DataRiver (EC) 27/03/2018
+     * 
+     * @param to
+     * @param replyTo
+     * @param bcc (optional)
+     * @param subject
+     * @param body
+     * @param htmlEmail
+     * @param filePathName (optional)
+     * @return
+     * @throws Exception
+     */
+    public Boolean sendEmailWithReplyTo(String to, String replyTo, String bcc, String subject, String body, Boolean htmlEmail, String filePathName) throws Exception {
+    	
+        Boolean messageSent = true;
+        String successMessage = respage.getString("your_message_sent_succesfully");
+        String failMessage = respage.getString("mail_cannot_be_sent_to_admin");
+        Boolean sendMessage = true;
+        
+        try {
+            JavaMailSenderImpl mailSender = (JavaMailSenderImpl) SpringServletAccess.getApplicationContext(context).getBean("mailSender");
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, htmlEmail);
+            helper.setFrom(EmailEngine.getAdminEmail());
+            helper.setTo(processMultipleImailAddresses(to.trim()));
+            helper.setSubject(subject);
+            helper.setReplyTo(replyTo);
+			
+			if (filePathName != null && !filePathName.isEmpty() && new File(filePathName).exists()){
+				File f = new File(filePathName);
+				String absoluteFilePath = f.getAbsolutePath();
+				String fileName = f.getName();
+				
+				// Create the message part 
+				MimeBodyPart messageBodyPart = new MimeBodyPart();		  
+				messageBodyPart.setText(body, "ISO-8859-15", "html");
+				MimeMultipart multipart = new MimeMultipart();
+				multipart.addBodyPart(messageBodyPart);
+				  
+				// Part two is attachment
+				messageBodyPart = new MimeBodyPart();
+				if (absoluteFilePath!=null && fileName !=null){
+					FileDataSource source = new FileDataSource(absoluteFilePath);
+					messageBodyPart.setDataHandler(new DataHandler(source));
+					messageBodyPart.setFileName(fileName);
+				}
+				  
+				multipart.addBodyPart(messageBodyPart);
+				
+				// Put parts in message
+				mimeMessage.setContent(multipart);
+				mimeMessage.saveChanges();
+				
+			} else {
+				helper.setText(body, true);
+			}				
+
+            mailSender.send(mimeMessage);
+            if (successMessage != null && sendMessage) {
+                addPageMessage(successMessage);
+            }
+            logger.debug("Email sent successfully on {}", new Date());
+        } catch (MailException me) {
+            me.printStackTrace();
+            if (failMessage != null && sendMessage) {
+                addPageMessage(failMessage);
+            }
+            logger.debug("Email could not be sent on {} due to: {}", new Date(), me.toString());
+            messageSent = false;
+        }
+        return messageSent;
+    }
+
+    /**
+     * SC Send email "silently" catching any type of exception. This method doesn't show any message either in case of success or fail
+     * @author DataRiver (EC) 27/03/2018
+     * 
+     * @param to
+     * @param bcc (optional)
+     * @param from
+     * @param subject
+     * @param body
+     * @param htmlEmail
+     * @param filePathName (optional)
+     * @return
+     */
+    public Boolean sendBackgroundEmail(String to, String bcc, String from, String subject, String body, Boolean htmlEmail, String filePathName) {
+    	   	
+    	Boolean messageSent = true;
+            try {
+                JavaMailSenderImpl mailSender = (JavaMailSenderImpl) SpringServletAccess.getApplicationContext(context).getBean("mailSender");
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, htmlEmail);
+                helper.setFrom(from);
+                helper.setTo(processMultipleImailAddresses(to.trim()));
+                if(bcc != null && !bcc.isEmpty()) helper.setBcc(processMultipleImailAddresses(bcc.trim()));
+                helper.setSubject(subject);
+				
+				if (filePathName != null && !filePathName.isEmpty() && new File(filePathName).exists()){
+					File f = new File(filePathName);
+					String absoluteFilePath = f.getAbsolutePath();
+					String fileName = f.getName();
+					
+					// Create the message part 
+					MimeBodyPart messageBodyPart = new MimeBodyPart();		  
+					messageBodyPart.setText(body, "ISO-8859-15", "html");
+					MimeMultipart multipart = new MimeMultipart();
+					multipart.addBodyPart(messageBodyPart);
+					  
+					// Part two is attachment
+					messageBodyPart = new MimeBodyPart();
+					if (absoluteFilePath!=null && fileName !=null){
+						FileDataSource source = new FileDataSource(absoluteFilePath);
+						messageBodyPart.setDataHandler(new DataHandler(source));
+						messageBodyPart.setFileName(fileName);
+					}
+					  
+					multipart.addBodyPart(messageBodyPart);
+					
+					// Put parts in message
+					mimeMessage.setContent(multipart);
+					mimeMessage.saveChanges();
+					
+				} else {
+					helper.setText(body, true);
+				}
+
+                mailSender.send(mimeMessage);
+                logger.info("Email sent successfully on {}", new Date());
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info("Email could not be sent on {} due to: {}", new Date(), e.toString());
+                messageSent = false;
+            }
+            return messageSent;
+
+    }
+    
+    /**
+     * SC Send email "silently" catching any type of exception. This method doesn't show any message either in case of success or fail
+     * @author DataRiver (EC) 27/03/2018
+     * 
+     * @param to
+     * @param bcc (optional)
+     * @param from
+     * @param subject
+     * @param body
+     * @param htmlEmail
+     * @return
+     */
+    public Boolean sendBackgroundEmail(String to, String bcc, String from, String subject, String body, Boolean htmlEmail) {
+    	   	
+    	Boolean messageSent = true;
+            try {
+                JavaMailSenderImpl mailSender = (JavaMailSenderImpl) SpringServletAccess.getApplicationContext(context).getBean("mailSender");
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, htmlEmail);
+                helper.setFrom(from);
+                helper.setTo(processMultipleImailAddresses(to.trim()));
+                if(bcc != null && !bcc.isEmpty())helper.setBcc(processMultipleImailAddresses(bcc.trim()));
+                helper.setSubject(subject);
+                helper.setText(body, true);
+
+                mailSender.send(mimeMessage);
+                logger.info("Email sent successfully on {}", new Date());
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info("Email could not be sent on {} due to: {}", new Date(), e.toString());
+                messageSent = false;
+            }
+            return messageSent;
+
+    }
+    
+    
     private InternetAddress[] processMultipleImailAddresses(String to) throws MessagingException {
         ArrayList<String> recipientsArray = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(to, ",");
@@ -1204,6 +1511,161 @@ public abstract class SecureController extends HttpServlet implements SingleThre
     }
 
     
+    /**
+     * Log email in database table datariver_email_log and save email body to html file in different folder (based on success or fail of sending email)
+     * @author DataRiver (EC) 27/03/2018
+     * 
+     * @param deliveryStatus
+     * @param htmlBody
+     * @param emailId
+     * @param emailTypeId
+     * @param subject
+     * @param recipients
+     * @param sender
+     * @param bcc
+     * @param ub
+     * @param fileNamePrefix
+     */
+    public void logDatariverEmail(
+    		String deliveryStatus, 
+    		String htmlBody,
+    		Integer emailId, 
+    		Integer emailTypeId, 
+    		String subject, 
+    		String recipients, 
+    		String sender, 
+    		String bcc,    		
+    		UserAccountBean ub, 
+    		String fileNamePrefix){
+    	
+    	Date dateSent = new Date();
+    	String emailCompleteFilepathHtml = "";
+    	String emailCompleteFilepathPdf = "";
+    	
+    	//get openclinica.data filepath from datainfo.properties
+    	String filePath = CoreResources.getField("filePath");
+        if (filePath != null) {
+            filePath = filePath.trim();
+        }
+        
+        //add (or create and add) directories /email/[sent|failed] to openclinica.data filepath. 
+        File dir = new File(filePath + File.separator + "email" + File.separator + deliveryStatus);
+        if (!dir.isDirectory()) {
+        	dir.mkdirs();
+        }
+        
+        //get email_type_descritpion
+        String emailTypeDescription = getDatariverEmailTypeDao().getDatariverEmailTypeById(emailTypeId).getDescription();
+        
+        //filename based on pattern as specified in method setEmailLogFilename(String prefix, Date dateSent, String emailTypeDescription)              
+        emailCompleteFilepathHtml = dir + File.separator + setEmailLogFilename(fileNamePrefix, dateSent, emailTypeDescription, "html");
+        emailCompleteFilepathPdf = dir + File.separator + setEmailLogFilename(fileNamePrefix, dateSent, emailTypeDescription, "pdf");
+        
+        //write log in html file
+    	writeEmailToHtmlFile(emailCompleteFilepathHtml, htmlBody);
+    	
+    	//write log in html file
+    	//writeEmailToPdfFile(emailCompleteFilepathPdf, htmlBody);
+    	
+    	DatariverEmailLogBean emailLogBean = new DatariverEmailLogBean(dateSent, ub.getId(), emailId, deliveryStatus); 
+    	emailLogBean.setBcc(bcc);
+    	emailLogBean.setEmailTypeId(emailTypeId);
+    	emailLogBean.setHtmlBodyFilepath(emailCompleteFilepathHtml);
+    	emailLogBean.setRecipients(recipients);
+    	emailLogBean.setSender(sender);
+    	emailLogBean.setSubject(subject);
+    	
+    	//write to database
+    	getDatariverEmailLogDao().insertLog(emailLogBean);
+    	
+    }
     
+
+    
+	/**
+	 * Replace all parameters labels with corresponding values in given text
+	 * 
+	 * @author DataRiver (EC) 27/03/2018
+	 * @param textToBeReplaced
+	 * @param createdUserAccountBean
+	 * @param password
+	 * @return
+	 */
+	public String setNewFILAccountEmailParameters(String textToBeReplaced, UserAccountBean createdUserAccountBean, String password){
+		
+        String study = "";
+        StudyDAO sdao = new StudyDAO(sm.getDataSource());
+        StudyBean sb = (StudyBean) sdao.findByPK(createdUserAccountBean.getActiveStudyId());
+        if (sb.getParentStudyId() > 0){ //site user: get protocol name and site name
+        	StudyBean sbParent = (StudyBean) sdao.findByPK(sb.getParentStudyId());
+        	study = sbParent.getAbbreviatedName() + ", " + sb.getAbbreviatedName();
+        } else { //study user: get protocol name only
+        	study = sb.getAbbreviatedName();
+        }     	   
+        
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{firstName\\}", createdUserAccountBean.getFirstName());
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{lastName\\}", createdUserAccountBean.getLastName());
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{username\\}", createdUserAccountBean.getName());
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{sysUrl\\}", SQLInitServlet.getField("sysURL"));
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{study\\}", study);
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{role\\}", createdUserAccountBean.getActiveStudyRoleName());  	
+    	if (password != "") textToBeReplaced = textToBeReplaced.replaceAll("\\{password\\}", password);
+    	
+    	return textToBeReplaced;	    
+	}
+    
+	/**
+	 * Create Email Log file name. Prefix should match these patterns:
+	 * [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+	 * [STUDYNAME]_enrollment_disable_yyyy-MM-dd_HHmmssS.html
+	 * [STUDYNAME]_enrollment_enable_yyyy-MM-dd_HHmmssS.html
+	 * [USERNAME]_FIL_new_user_and_password_yyyy-MM-dd_HHmmssS.html
+	 * [USERNAME]_FIL_new_user_notice_yyyy-MM-dd_HHmmssS.html 
+	 * TEST_send_email_test_yyyy-MM-dd_HHmmssS.html
+	 * 
+	 * @author DataRiver (EC) 27/03/2018
+	 * @param prefix
+	 * @param dateSent
+	 * @param emailTypeDescription
+	 * @return
+	 */
+	public String setEmailLogFilename(String prefix, Date dateSent, String emailTypeDescription, String fileExtension) {
+		String fileName;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmmssS");
+        //create filename and replace all non standard characters
+        fileName = (prefix + "_" + emailTypeDescription + "_" + sdf.format(dateSent) + "." + fileExtension).replaceAll("[^a-zA-Z0-9.-]", "_");
+		return fileName;
+	}
+	
+    /**
+     * Write email body to html file
+     * @author DataRiver (EC) 27/03/2018
+     */
+    public void writeEmailToHtmlFile(String filePath, String htmlBody) {
+  	
+    	BufferedWriter bufferedWriter = null;
+    	
+    	try {            
+    		
+    		//Construct the BufferedWriter object
+    		bufferedWriter = new BufferedWriter(new FileWriter(new File(filePath)));
+    		bufferedWriter.write(htmlBody);
+   		
+    	} catch (FileNotFoundException ex) {
+    		ex.printStackTrace();
+    	} catch (IOException ex) {
+    		ex.printStackTrace();
+    	} finally {
+    		//Close the BufferedWriter
+    		try {
+    			if (bufferedWriter != null) {
+    				bufferedWriter.flush();
+    				bufferedWriter.close();
+    			}
+    		} catch (IOException ex) {
+    			ex.printStackTrace();
+    		}
+    	}
+    }    
     
 }
