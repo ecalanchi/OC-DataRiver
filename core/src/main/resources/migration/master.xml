@@ -15,6 +15,7 @@
   <include  file="migration/3.10/release.xml"/>  
   <include  file="migration/3.11/release.xml"/>  
   <include  file="migration/3.12/release.xml"/>
+  <include  file="migration/3.14/release.xml"/>
 	<!-- //+DR added by Datariver (EC) 22/02/2017  -->
   <include  file="migration/datariver/release.xml"/>
 	<!-- //+DR end added by Datariver (EC) 22/02/2017  -->
