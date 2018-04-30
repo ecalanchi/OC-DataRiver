@@ -14,6 +14,7 @@ import org.akaza.openclinica.bean.login.UserAccountBean;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -24,6 +25,7 @@ public class ApiSecurityFilter extends OncePerRequestFilter {
     private String realm = "Protected";
 
     @Autowired
+    @Qualifier("dataSource")
     private DataSource dataSource;
 
 
