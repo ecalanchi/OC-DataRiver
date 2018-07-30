@@ -570,7 +570,9 @@ public class XsltTransformJob extends QuartzJobBean {
     private void initDependencies(Scheduler scheduler) {
         try {
             ApplicationContext ctx = (ApplicationContext) scheduler.getContext().get("applicationContext");
-            DataSource dataSource = ctx.getBean(DataSource.class);
+            //+DR modified by DataRiver (EC) 08/03/2018 bug fix dataset extraction 
+            //DataSource dataSource = ctx.getBean(DataSource.class);
+            DataSource dataSource = ctx.getBean("dataSource", DataSource.class);
 
             mailSender = ctx.getBean(OpenClinicaMailSender.class);
             auditEventDAO = ctx.getBean(AuditEventDAO.class);

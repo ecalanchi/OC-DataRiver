@@ -141,6 +141,20 @@
  //    	return rs;
  //    }	
      
+ 	/**
+ 	 * Get email (unique by study) for administrative editing changes.
+ 	 * @author DataRiver (EC) 02/05/2018
+ 	 * @param studyId
+ 	 * @return
+ 	 */
+ 	@Transactional
+ 	public DatariverEmailBean getDatariverEmailAdminEdit(int studyId) {
+     	String hql = "FROM DatariverEmailBean where studyId=:studyId and emailTypeId=6 and enabled=true" ;
+     	org.hibernate.Query query = getCurrentSession().createQuery(hql);
+     	query.setParameter("studyId", studyId);
+     	return (DatariverEmailBean) query.uniqueResult();
+ 	}
+ 	
  	@Transactional
  	public DatariverEmailBean getDatariverEmailEnrollment(int studyId, int emailTypeId) {
      	String hql = "FROM DatariverEmailBean where studyId=:studyId and emailTypeId=:emailTypeId and enabled=true" ;

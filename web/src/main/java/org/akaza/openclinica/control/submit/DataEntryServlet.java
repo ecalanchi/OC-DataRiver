@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -277,6 +278,11 @@ public abstract class DataEntryServlet extends CoreSecureController {
 		return randomizationCustomDao;
 	}
 	//+DR added by DataRiver (EC) 28/11/2017 
+    
+    //+DR added by DataRiver (EC) 02/05/2018
+	//hashset doesn't add duplicates
+	Set<String> listAdminEditItems = new HashSet<String>();
+	//+DR end added by DataRiver (EC) 02/05/2018
 
 
 
@@ -1317,6 +1323,13 @@ public abstract class DataEntryServlet extends CoreSecureController {
                 // change everything here from changed items list to changed
                 // items map
                 if (changedItemsList.size() > 0) {
+                	
+                	//+DR added by DataRiver (EC) 02/05/2018
+                	for (String ic : changedItems) {
+                    	listAdminEditItems.add(ic);
+                    	}
+                	//+DR end added by DataRiver (EC) 02/05/2018
+                	
                     LOGGER.debug("found admin force reason for change: changed items " + changedItems.toString() + " and changed items list: "
                         + changedItemsList.toString() + " changed items map: " + changedItemsMap.toString());
                     logMe("DisplayItemBean  Loop begin  "+System.currentTimeMillis());
@@ -1375,6 +1388,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
                 if (nonforcedChanges > 0) {
                     // do smething here?
                 }
+                
             }
             LOGGER.debug("errors here: " + errors.toString());
             // <<
@@ -2206,6 +2220,58 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                         }
                                     }
                                     session.removeAttribute(instantAtt);
+                                    
+                                    //+DR added by DataRiver (EC) 02/05/2018
+                                    if (this.isAdminForcedReasonForChange(request) && this.isAdministrativeEditing() && errors.isEmpty()) {
+	                                    //System.out.println("##### administrative editing concluded #####");
+                                    	String body = "";
+                                        String emailSubject = "";
+                                        Integer parentStudyId = null;
+                                                                             
+                                        DatariverEmailBean deb = (DatariverEmailBean) getDatariverEmailDao().getDatariverEmailAdminEdit(study.getParentStudyId()>0 ? study.getParentStudyId() : study.getId());
+          	                            	
+    	                            	//send email after checks
+	                            		Boolean messageSent = false;
+	                            		
+	                            		body = deb.getHtmlBody();
+	                            		
+	                                    //update list with items changed in last tab
+	                            		for (String ic : changedItems) {
+	                                    	listAdminEditItems.add(ic);
+	                                    	}
+	                            		//iterate through the set and add HTML
+	                            		String listAdminEditItemsHtml = "";
+	                                    for (String str : listAdminEditItems) {
+	                                    	listAdminEditItemsHtml += str + "<br />";
+	                                    }
+	                                    body = body.replaceAll("\\{list\\}", listAdminEditItemsHtml);
+	                                    body = body.replaceAll("\\{timestamp\\}", "" + new SimpleDateFormat("dd/MM/yyyy HH:mm.ss").format(new Date()));
+	                                    
+		                                body = setEmailParameters(body, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+	                                    
+	                            		emailSubject = deb.getSubject();
+	                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+		                                	                            	                                		                                	                                
+		                                String recipients = deb.getRecipients().trim();
+
+	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
+	                    					                    			
+		                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+		                    	    	logDatariverEmail(
+		                    		    		messageSent ? "sent" : "failed", 
+		                    		    		body, 
+		                    		    		deb.getEmailId(), 
+		                    		    		deb.getEmailTypeId(), 
+		                    		    		emailSubject, 
+		                    		    		recipients, 
+		                    		    		deb.getSender(), 
+		                    		    		deb.getBcc(), 
+		                    		    		ub, 
+		                    		    		currentStudy.getAbbreviatedName());	
+            		                    			
+                                    }
+                                    //+DR end added by DataRiver (EC) 02/05/2018
+                                    
                                     forwardPage(Page.ENTER_DATA_FOR_STUDY_EVENT_SERVLET, request, response);
                                     return;
 
