@@ -2229,47 +2229,49 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                         Integer parentStudyId = null;
                                                                              
                                         DatariverEmailBean deb = (DatariverEmailBean) getDatariverEmailDao().getDatariverEmailAdminEdit(study.getParentStudyId()>0 ? study.getParentStudyId() : study.getId());
-          	                            	
-    	                            	//send email after checks
 	                            		Boolean messageSent = false;
-	                            		
-	                            		body = deb.getHtmlBody();
-	                            		
-	                                    //update list with items changed in last tab
-	                            		for (String ic : changedItems) {
-	                                    	listAdminEditItems.add(ic);
-	                                    	}
-	                            		//iterate through the set and add HTML
-	                            		String listAdminEditItemsHtml = "";
-	                                    for (String str : listAdminEditItems) {
-	                                    	listAdminEditItemsHtml += str + "<br />";
+    	                            	
+    	                            	//check deb
+    	                            	if (deb != null){
+	    	                            	//send email after checks	                            		
+		                            		body = deb.getHtmlBody();
+		                            		
+		                                    //update list with items changed in last tab
+		                            		for (String ic : changedItems) {
+		                                    	listAdminEditItems.add(ic);
+		                                    	}
+		                            		//iterate through the set and add HTML
+		                            		String listAdminEditItemsHtml = "";
+		                                    for (String str : listAdminEditItems) {
+		                                    	listAdminEditItemsHtml += str + "<br />";
+		                                    }
+		                                    body = body.replaceAll("\\{list\\}", listAdminEditItemsHtml);
+		                                    body = body.replaceAll("\\{timestamp\\}", "" + new SimpleDateFormat("dd/MM/yyyy HH:mm.ss").format(new Date()));
+		                                    
+			                                body = setEmailParameters(body, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+		                                    
+		                            		emailSubject = deb.getSubject();
+		                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+			                                	                            	                                		                                	                                
+			                                String recipients = deb.getRecipients().trim();
+	
+		                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
+		                    					                    			
+			                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+			                    	    	logDatariverEmail(
+			                    		    		messageSent ? "sent" : "failed", 
+			                    		    		body, 
+			                    		    		deb.getEmailId(), 
+			                    		    		deb.getEmailTypeId(), 
+			                    		    		emailSubject, 
+			                    		    		recipients, 
+			                    		    		deb.getSender(), 
+			                    		    		deb.getBcc(), 
+			                    		    		ub, 
+			                    		    		currentStudy.getAbbreviatedName());	
+	            		                    			
 	                                    }
-	                                    body = body.replaceAll("\\{list\\}", listAdminEditItemsHtml);
-	                                    body = body.replaceAll("\\{timestamp\\}", "" + new SimpleDateFormat("dd/MM/yyyy HH:mm.ss").format(new Date()));
-	                                    
-		                                body = setEmailParameters(body, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
-	                                    
-	                            		emailSubject = deb.getSubject();
-	                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
-		                                	                            	                                		                                	                                
-		                                String recipients = deb.getRecipients().trim();
-
-	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
-	                    					                    			
-		                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
-		                    	    	logDatariverEmail(
-		                    		    		messageSent ? "sent" : "failed", 
-		                    		    		body, 
-		                    		    		deb.getEmailId(), 
-		                    		    		deb.getEmailTypeId(), 
-		                    		    		emailSubject, 
-		                    		    		recipients, 
-		                    		    		deb.getSender(), 
-		                    		    		deb.getBcc(), 
-		                    		    		ub, 
-		                    		    		currentStudy.getAbbreviatedName());	
-            		                    			
-                                    }
+	                            	}
                                     //+DR end added by DataRiver (EC) 02/05/2018
                                     
                                     forwardPage(Page.ENTER_DATA_FOR_STUDY_EVENT_SERVLET, request, response);
