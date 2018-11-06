@@ -142,6 +142,10 @@ public class ListStudySubjectsServlet extends SecureController {
         request.setAttribute("findSubjectsHtml", findSubjectsHtml);
         // A. Hamid.
         // For event definitions and group class list in the add subject popup
+        
+        //+DR added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018]
+        request.setAttribute("suppressAddSubject", false);
+        
         request.setAttribute("allDefsArray", super.getEventDefinitionsByCurrentStudy());
         request.setAttribute("studyGroupClasses", super.getStudyGroupClassesByCurrentStudy());
         FormDiscrepancyNotes discNotes = new FormDiscrepancyNotes();

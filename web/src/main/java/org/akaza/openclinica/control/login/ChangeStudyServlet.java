@@ -169,6 +169,12 @@ public class ChangeStudyServlet extends SecureController {
 
         StudyDAO sdao = new StudyDAO(sm.getDataSource());
         StudyBean current = (StudyBean) sdao.findByPK(studyId);
+        
+        /**
+         *  +DR added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018]
+         *  Adding variable enable enrollment
+         */
+        current.setEnrollmentEn(getDatariverEnrollmentEnableDAO().isEnableStudy(current.getParentStudyId(), current.getId()));
 
         // reset study parameters -jxu 02/09/2007
         StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());

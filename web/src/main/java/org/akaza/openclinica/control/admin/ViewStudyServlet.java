@@ -9,10 +9,13 @@ package org.akaza.openclinica.control.admin;
 
 import org.akaza.openclinica.bean.managestudy.StudyBean;
 import org.akaza.openclinica.bean.managestudy.StudyEventDefinitionBean;
+import org.akaza.openclinica.control.SpringServletAccess;
 import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.submit.SubmitDataServlet;
 import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEnrollmentEnableDao;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEnrollmentEnableLogDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
 import org.akaza.openclinica.dao.managestudy.EventDefinitionCRFDAO;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
@@ -20,6 +23,8 @@ import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
 import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.service.StudyConfigService;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
+import org.akaza.openclinica.domain.datariver.DatariverEnrollmentEnableBean;
+import org.akaza.openclinica.domain.datariver.DatariverEnrollmentEnableLogBean;
 import org.akaza.openclinica.service.pmanage.ParticipantPortalRegistrar;
 import org.akaza.openclinica.service.pmanage.RandomizationRegistrar;
 import org.akaza.openclinica.service.pmanage.SeRandomizationDTO;
@@ -27,6 +32,8 @@ import org.akaza.openclinica.view.Page;
 import org.akaza.openclinica.web.InsufficientPermissionException;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 /**
  * @author jxu
@@ -34,6 +41,10 @@ import java.util.ArrayList;
  * Processes the reuqest of 'view study details'
  */
 public class ViewStudyServlet extends SecureController {
+	
+	private DatariverEnrollmentEnableDao datariverEnrollmentEnableDAO;
+	private DatariverEnrollmentEnableLogDao datariverEnrollmentEnableLogDAO;
+	
     /**
      * Checks whether the user has the correct privilege
      */
@@ -51,12 +62,27 @@ public class ViewStudyServlet extends SecureController {
         throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("not_admin"), "1");
 
     }
+    
+	/**
+     *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+     *  Adding information about enrollment enabling in sites
+     */
+	public DatariverEnrollmentEnableDao getDatariverEnrollmentEnableDAO() {
+		datariverEnrollmentEnableDAO = this.datariverEnrollmentEnableDAO != null ? datariverEnrollmentEnableDAO : (DatariverEnrollmentEnableDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEnrollmentEnableDAO");
+        return datariverEnrollmentEnableDAO;
+	}
+
+	public DatariverEnrollmentEnableLogDao getDatariverEnrollmentEnableLogDAO() {
+		datariverEnrollmentEnableLogDAO = this.datariverEnrollmentEnableLogDAO != null ? datariverEnrollmentEnableLogDAO : (DatariverEnrollmentEnableLogDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEnrollmentEnableLogDAO");
+        return datariverEnrollmentEnableLogDAO;
+	}
 
     @Override
     public void processRequest() throws Exception {
 
         StudyDAO sdao = new StudyDAO(sm.getDataSource());
         FormProcessor fp = new FormProcessor(request);
+        
         int studyId = fp.getInt("id");
         if (studyId == 0) {
             addPageMessage(respage.getString("please_choose_a_study_to_view"));
@@ -64,6 +90,33 @@ public class ViewStudyServlet extends SecureController {
         } else {
             if (currentStudy.getId() != studyId && currentStudy.getParentStudyId() != studyId) {
                 checkRoleByUserAndStudy(ub, studyId, 0);
+            }
+            
+            /**
+             *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+             *  Adding information about enrollment enabling in sites
+             */
+            //security checks
+            if (fp.getRequest().getMethod().contains("POST")){
+            	DatariverEnrollmentEnableLogBean log = new DatariverEnrollmentEnableLogBean(new Date(),ub.getId() );
+            	if (fp.getString("submit").equals("Disable")||fp.getString("submit").equals("Enable")){	
+            		int idToChange=fp.getInt("enrChangeId");
+            		boolean currEn=Boolean.parseBoolean(fp.getString("enrChangeBool"));
+            		log.setStudyId(idToChange);
+            		log.setEnrollmentEnabledNewStatus(!currEn);
+            		getDatariverEnrollmentEnableDAO().changeEnable(idToChange,!currEn);
+            	} else if (fp.getString("submit").contains("Enable All")){
+            		int idParentToChange=fp.getInt("studyToChange");
+            		log.setStudyId(idParentToChange);
+            		log.setEnrollmentEnabledNewStatus(true);
+            		getDatariverEnrollmentEnableDAO().updateChildOfAStudy(studyId,true);
+            	} else if (fp.getString("submit").contains("Disable All")){
+            		int idParentToChange=fp.getInt("studyToChange");
+            		log.setStudyId(idParentToChange);
+            		log.setEnrollmentEnabledNewStatus(false);
+            		getDatariverEnrollmentEnableDAO().updateChildOfAStudy(studyId,false);
+            	}
+            	getDatariverEnrollmentEnableLogDAO().insertLog(log);
             }
 
             String viewFullRecords = fp.getString("viewFull");
@@ -151,6 +204,15 @@ public class ViewStudyServlet extends SecureController {
                 request.setAttribute("portalURL", portalURL);
 
                 request.setAttribute("config", study);
+                
+                /**
+                 *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+                 *  Adding information about enrollment enabling in sites
+                 */
+                HashMap<Integer,Boolean> enroEn=this.createEnableHash(getDatariverEnrollmentEnableDAO().findAll());
+                sites=addEnrollingEnable(sites,enroEn);
+
+                request.setAttribute("studyId", studyId);
 
                 request.setAttribute("sitesToView", sites);
                 request.setAttribute("siteNum", sites.size() + "");
@@ -178,6 +240,28 @@ public class ViewStudyServlet extends SecureController {
         } else {
             return "";
         }
+    }
+    
+    /**
+     *  +DR added by DataRiver Fabio Benedetti 22/06/2014 [Enrico Calanchi 06/11/2018]
+     *  Enabling enrollment 
+     */
+    private HashMap<Integer,Boolean> createEnableHash(ArrayList<DatariverEnrollmentEnableBean> findAll){
+    	HashMap<Integer,Boolean> en=new HashMap();
+    	for(DatariverEnrollmentEnableBean current : findAll){
+    		en.put(current.getStudyId(),new Boolean(current.isEnable()));
+    	}
+    	return en;
+    }
+
+    private ArrayList addEnrollingEnable(ArrayList sit, HashMap<Integer,Boolean> enEn) {
+    	ArrayList tmp=new ArrayList();
+    	for(int i = 0; i < sit.size(); i++){
+	    	StudyBean current=(StudyBean) sit.get(i);
+	    	current.setEnrollmentEn(enEn.get(current.getId()));
+	    	tmp.add(current);
+    	}
+    	return tmp;
     }
 
 }

@@ -81,6 +81,28 @@ public class StudyBean extends AuditableEntityBean {
     private StudyParameterConfig studyParameterConfig = new StudyParameterConfig();
 
     private ArrayList studyParameters = new ArrayList();
+    
+    /*
+     * +DR added by DataRiver to enable or disable enrollment
+     * Fabio Benedetti 16/12/2014
+     * Enrico Calanchi 06/11/2018
+     * 
+     */
+    //set to false which is the less common case. The variable will be updated by secure controller
+    private Boolean enrollmentEn;
+    
+    
+    public boolean isEnrollmentEn() {
+		return enrollmentEn;
+	}
+    
+    public boolean isEnrollmentEnSett(){
+    	return enrollmentEn==null?false:true;
+    }
+
+	public void setEnrollmentEn(boolean enrollmentEn) {
+		this.enrollmentEn = enrollmentEn;
+	}
 
     /**
      * @return Returns the studyParameters.

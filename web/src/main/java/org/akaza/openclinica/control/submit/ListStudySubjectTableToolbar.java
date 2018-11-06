@@ -42,6 +42,8 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
         addToolbarItem(createCustomItem(new NewHiddenItem()));
         if (addSubjectLinkShow) {
             addToolbarItem(createAddSubjectItem());
+        } else {
+        	addToolbarItem(createCustomItem(new AddNewSubjectDisabledItem()));
         }
     }
 
@@ -154,6 +156,27 @@ public class ListStudySubjectTableToolbar extends DefaultToolbar {
             html.quote();
             html.quote().close();
             html.nbsp().append(reswords.getString("add_new_subject")).nbsp().aEnd();
+
+            return html.toString();
+        }
+
+    }
+    
+    /**
+     *  +DR added by DataRiver Enrico Calanchi 06/11/2018
+     */
+    private class AddNewSubjectDisabledItem extends AbstractItem {
+
+        @Override
+        public String disabled() {
+        	// TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String enabled() {
+            HtmlBuilder html = new HtmlBuilder();
+            html.div().styleClass("alert").close().nbsp().append(reswords.getString("subject_enrollment_disabled")).nbsp().divEnd().aEnd();
 
             return html.toString();
         }

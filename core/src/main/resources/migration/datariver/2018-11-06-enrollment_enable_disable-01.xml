@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+    <changeSet id="2018-11-06-enrollment_enable_disable-01_01" author="Fabio Benedetti">
+        <comment>datariver_enrollment_enable table creation and population</comment>
+        <createTable tableName="datariver_enrollment_enable">
+            <column name="study_id" type="int">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="enable" type="BOOLEAN"/>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="study_id"
+                                 baseTableName="datariver_enrollment_enable"
+                                 constraintName="study_fk"
+                                 referencedColumnNames="study_id"
+                                 referencedTableName="study"/>
+        <sql>
+        	INSERT INTO datariver_enrollment_enable (study_id,enable)
+        	SELECT study_id, true FROM study WHERE parent_study_id is not null;        	
+    	</sql>
+    </changeSet>
+    <changeSet id="2018-11-06-enrollment_enable_disable-01_02" author="Fabio Benedetti">
+        <comment>datariver_enrollment_enable_log table creation</comment>
+        <createTable tableName="datariver_enrollment_enable_log">
+            <column autoIncrement="true" name="id" type="int">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="study_id" type="int"/>
+            <column name="enrollment_enabled_new_status" type="BOOLEAN"/>
+            <column name="date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="int"/>
+        </createTable>
+    </changeSet> 
+</databaseChangeLog>

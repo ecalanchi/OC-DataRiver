@@ -638,6 +638,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+            eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -669,6 +671,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -685,6 +689,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -713,6 +719,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -727,6 +735,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -764,6 +774,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -781,6 +793,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
@@ -806,6 +820,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
 
         if (it.hasNext()) {
             eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
         }
 
         return eb;
@@ -827,6 +843,8 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
 
         if (it.hasNext()) {
             eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
         }
 
         return eb;
@@ -997,10 +1015,94 @@ public class StudyDAO <K extends String,V extends ArrayList> extends AuditableEn
         Iterator it = alist.iterator();
         while (it.hasNext()) {
             StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+			eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
             al.add(eb);
         }
         return al;
 
+    }
+
+    /**
+     * added by DataRiver 24/05/2012
+	 * Enrico Calanchi 06/11/2018
+     * @param studyId
+     * @param username
+     * @return
+     */
+//    public Collection findAllByParentStudyIdAndUserRole(int studyId, String username ) {
+//        this.setTypesExpected();
+//        HashMap variables = new HashMap();
+//        variables.put(new Integer(1), new Integer(studyId));
+//        variables.put(new Integer(2), new Integer(studyId));
+//        variables.put(new Integer(3), username);
+//        
+//        ArrayList alist = this.select(digester.getQuery("findAllByParentStudyIdAndUserRole"), variables);
+//        ArrayList al = new ArrayList();
+//        Iterator it = alist.iterator();
+//        while (it.hasNext()) {
+//            StudyBean eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+//			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+//            eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
+//            al.add(eb);
+//        }
+//        return al;
+//
+//    }
+    
+    /**
+     * added by DataRiver 24/05/2012
+	 * Enrico Calanchi 06/11/2018
+     * @param protocolName
+     * @return
+     */
+//    public StudyBean findByNameIlike(String protocolName ) {
+//        StudyBean eb = null;
+//        this.setTypesExpected();
+//
+//        HashMap variables = new HashMap();
+//        variables.put(new Integer(1), protocolName);
+//
+//        String sql = digester.getQuery("findByNameIlike");
+//        ArrayList alist = this.select(sql, variables);
+//        Iterator it = alist.iterator();
+//
+//        if (it.hasNext()) {
+//            eb = (StudyBean) this.getEntityFromHashMap((HashMap) it.next());
+//			//+DR added by DataRiver Fabio 14/07/2014 [Enrico Calanchi 06/11/2018]
+//            eb.setEnrollmentEn(this.isStudyEnable(eb.getId(), eb.getParentStudyId()));
+//        }
+//
+//        return eb;
+//
+//    }
+    
+    /**
+     * added by DataRiver Fabio 14/07/2014
+	 * Enrico Calanchi 06/11/2018
+     * Method to return if the enrollment is enable for the current study 
+     */
+    
+    private boolean isStudyEnable(Integer studyID, Integer parentStudy){
+        this.unsetTypeExpected();
+        this.setTypeExpected(1, TypeNames.BOOL);
+    	HashMap variables = new HashMap();
+        variables.put(new Integer(1), studyID);
+        String sql = "";
+        if (parentStudy > 0){
+        	sql = digester.getQuery("isEnableEnrollmntStudyWithParent");
+        }else{
+        	sql = digester.getQuery("isEnableEnrollmntStudyNoParent");
+        }
+        ArrayList alist = this.select(sql, variables);
+        Iterator it = alist.iterator();
+        boolean result=false;
+        if (it.hasNext()) {
+        	HashMap value=(HashMap)it.next();
+            result=(Boolean) value.get("enable");
+        }
+        this.setTypesExpected();
+        return result;
     }
 
 }

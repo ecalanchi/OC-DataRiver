@@ -158,4 +158,22 @@
 		<name>findAllByParentStudyIdOrderedByIdAsc</name>
 		<sql>SELECT * FROM STUDY WHERE study_id=? or parent_study_id=? order by study_id asc</sql>
 	</query>
+<!-- //+DR added by DataRiver Fabio Benedetti 14/07/2014 [Enrico Calanchi 06/11/2018] -->
+	<query>
+		<name>isEnableEnrollmntStudyWithParent</name>
+		<sql>select enable 
+		from datariver_enrollment_enable 
+		where study_id = ?</sql>
+	</query>
+    	<query>
+		<name>isEnableEnrollmntStudyNoParent</name>
+		<sql>SELECT CASE WHEN COUNT(*) = 0 THEN false ELSE true END as enable
+		FROM datariver_enrollment_enable 
+		WHERE study_id IN 
+		( SELECT study_id 
+		FROM study 
+		WHERE parent_study_id = ? )
+		AND enable = true</sql>
+	</query>
+<!-- //+DR end added by DataRiver Fabio Benedetti 14/07/2014 [Enrico Calanchi 06/11/2018] -->
 </queries>

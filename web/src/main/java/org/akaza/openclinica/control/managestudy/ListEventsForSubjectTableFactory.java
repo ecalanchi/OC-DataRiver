@@ -191,7 +191,13 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
     @Override
     public void configureTableFacadePostColumnConfiguration(TableFacade tableFacade) {
         Role r = currentRole.getRole();
-        boolean addSubjectLinkShow = studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR);
+        /**
+         * +DR modified by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+         * adding information about enrollment enabling in sites
+         */
+        //boolean addSubjectLinkShow = studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR);
+        boolean addSubjectLinkShow = (studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR))&&studyBean.isEnrollmentEn();
+        
         tableFacade.setToolbar(new ListEventsForSubjectTableToolbar(getStudyEventDefinitions(), getStudyGroupClasses(), selectedStudyEventDefinition,
                 addSubjectLinkShow, showMoreLink));
     }

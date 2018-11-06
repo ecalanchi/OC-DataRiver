@@ -700,6 +700,20 @@
   <td class="table_header_row"><fmt:message key="principal_investigator" bundle="${resword}"/></td>
   <td class="table_header_row"><fmt:message key="status" bundle="${resword}"/></td>
   <td class="table_header_row">&nbsp;</td>
+ <%-- +DR added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018] --%>
+ <c:if test="${study.parentStudyId == 0}">
+	<td class="table_header_row">
+	<form action="ViewStudy?id=${studyId}&viewFull=yes" method="post">
+		<input type="submit" name="submit" value="Enable All" class="button"/>
+	  	<input type="hidden" name="studyToChange" value="${studyId}"/>
+	 </form>
+	 <form action="ViewStudy?id=${studyId}&viewFull=yes" method="post">
+	  	<input type="submit" name="submit" value="Disable All" class="button"/>
+	  	<input type="hidden" name="studyToChange" value="${studyId}"/>
+	 </form>
+	 </td> 
+ </c:if>
+ <%-- +DR end added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018] --%>
   <td></td>
   </tr>
   <c:forEach var="site" items="${sitesToView}">
@@ -718,6 +732,17 @@
 			name="bt_View1" src="images/bt_View.gif" border="0" alt="<fmt:message key="view" bundle="${resword}"/>" title="<fmt:message key="view" bundle="${resword}"/>" align="left" hspace="6"></a>
      </c:if>
    </td>
+   <%-- +DR added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018] --%>
+	<c:if test="${study.parentStudyId == 0}">
+	<td class="table_cell">
+	<form action="ViewStudy?id=${studyId}&viewFull=yes" method="post">
+		<input type="submit" name="submit" value="${(site.enrollmentEn==true)? 'Disable':'Enable'}" class="button">
+		<input type="hidden" name="enrChangeId" value="${site.id}">
+		<input type="hidden" name="enrChangeBool" value="${site.enrollmentEn}">
+	</form>
+	</td> 
+	</c:if>
+  <%-- +DR end added by DataRiver Fabio Benedetti 24/06/2014 [Enrico Calanchi 06/11/2018] --%>
   </tr>
   </c:forEach>
   </table>

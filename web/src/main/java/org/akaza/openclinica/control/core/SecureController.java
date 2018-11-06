@@ -82,6 +82,7 @@ import org.akaza.openclinica.dao.hibernate.UserAccountDao;
 import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailDao;
 import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailLogDao;
 import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailTypeDao;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEnrollmentEnableDao;
 import org.akaza.openclinica.dao.hibernate.datariver.StudySubjectCustomLabelDao;
 import org.akaza.openclinica.dao.managestudy.StudyDAO;
 import org.akaza.openclinica.dao.managestudy.StudyEventDAO;
@@ -225,6 +226,8 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 	private DatariverEmailDao datariverEmailDao;
 	private DatariverEmailLogDao datariverEmailLogDao;
 	private DatariverEmailTypeDao datariverEmailTypeDao;
+	//+DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+	private DatariverEnrollmentEnableDao datariverEnrollmentEnableDAO;
 	
 	public DatariverEmailDao getDatariverEmailDao() {
 		datariverEmailDao = this.datariverEmailDao != null ? datariverEmailDao : (DatariverEmailDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("datariverEmailDao");
@@ -238,7 +241,16 @@ public abstract class SecureController extends HttpServlet implements SingleThre
 		datariverEmailTypeDao = this.datariverEmailTypeDao != null ? datariverEmailTypeDao : (DatariverEmailTypeDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEmailTypeDao");
         return datariverEmailTypeDao;
 	}
-	//+DR end added by DataRiver (EC) 27/03/2018 	
+	//+DR end added by DataRiver (EC) 27/03/2018
+	
+	/**
+	 *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+	 *  Adding information about enrollment enabling in sites
+	 */
+	public DatariverEnrollmentEnableDao getDatariverEnrollmentEnableDAO() {
+		datariverEnrollmentEnableDAO = this.datariverEnrollmentEnableDAO != null ? datariverEnrollmentEnableDAO : (DatariverEnrollmentEnableDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEnrollmentEnableDAO");
+		return datariverEnrollmentEnableDAO;
+	}
     
     
     //+DR added by DataRiver (EC) 22/02/2017
@@ -475,6 +487,12 @@ public abstract class SecureController extends HttpServlet implements SingleThre
                 if (ub.getId() > 0 && ub.getActiveStudyId() > 0) {
                     StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());
                     currentStudy = (StudyBean) sdao.findByPK(ub.getActiveStudyId());
+                    
+                    /**
+                     *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+                     *  Adding information about enrollment enabling in sites
+                     */
+                    currentStudy.setEnrollmentEn(getDatariverEnrollmentEnableDAO().isEnableStudy(currentStudy.getParentStudyId(),currentStudy.getId()));
 
                     ArrayList studyParameters = spvdao.findParamConfigByStudy(currentStudy);
 
@@ -507,6 +525,14 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             } else if (currentStudy.getId() > 0) {
                 // YW 06-20-2007<< set site's parentstudy name when site is
                 // restored
+                
+            	/**
+                 *  +DR added by DataRiver Fabio Benedetti 23/06/2014 [Enrico Calanchi 06/11/2018]
+                 *  Adding information about enrollment enabling in sites
+                 */
+            	currentStudy.setEnrollmentEn(getDatariverEnrollmentEnableDAO().isEnableStudy(currentStudy.getParentStudyId(),currentStudy.getId()));
+            	
+            	
                 if (currentStudy.getParentStudyId() > 0) {
                     currentStudy.setParentStudyName(((StudyBean) sdao.findByPK(currentStudy.getParentStudyId())).getName());
                 }
