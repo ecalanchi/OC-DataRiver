@@ -14,6 +14,7 @@ import org.akaza.openclinica.control.core.SecureController;
 import org.akaza.openclinica.control.form.FormProcessor;
 import org.akaza.openclinica.control.submit.SubmitDataServlet;
 import org.akaza.openclinica.dao.core.CoreResources;
+import org.akaza.openclinica.dao.hibernate.datariver.DatariverEmailDao;
 import org.akaza.openclinica.dao.hibernate.datariver.DatariverEnrollmentEnableDao;
 import org.akaza.openclinica.dao.hibernate.datariver.DatariverEnrollmentEnableLogDao;
 import org.akaza.openclinica.dao.login.UserAccountDAO;
@@ -23,6 +24,7 @@ import org.akaza.openclinica.dao.managestudy.StudyEventDefinitionDAO;
 import org.akaza.openclinica.dao.managestudy.StudySubjectDAO;
 import org.akaza.openclinica.dao.service.StudyConfigService;
 import org.akaza.openclinica.dao.service.StudyParameterValueDAO;
+import org.akaza.openclinica.domain.datariver.DatariverEmailBean;
 import org.akaza.openclinica.domain.datariver.DatariverEnrollmentEnableBean;
 import org.akaza.openclinica.domain.datariver.DatariverEnrollmentEnableLogBean;
 import org.akaza.openclinica.service.pmanage.ParticipantPortalRegistrar;
@@ -44,6 +46,7 @@ public class ViewStudyServlet extends SecureController {
 	
 	private DatariverEnrollmentEnableDao datariverEnrollmentEnableDAO;
 	private DatariverEnrollmentEnableLogDao datariverEnrollmentEnableLogDAO;
+	private DatariverEmailDao datariverEmailDao;
 	
     /**
      * Checks whether the user has the correct privilege
@@ -76,6 +79,11 @@ public class ViewStudyServlet extends SecureController {
 		datariverEnrollmentEnableLogDAO = this.datariverEnrollmentEnableLogDAO != null ? datariverEnrollmentEnableLogDAO : (DatariverEnrollmentEnableLogDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEnrollmentEnableLogDAO");
         return datariverEnrollmentEnableLogDAO;
 	}
+	
+	public DatariverEmailDao getDatariverEmailDao() {
+		datariverEmailDao = this.datariverEmailDao != null ? datariverEmailDao : (DatariverEmailDao) SpringServletAccess.getApplicationContext(context).getBean("datariverEmailDao");
+        return datariverEmailDao;
+	}
 
     @Override
     public void processRequest() throws Exception {
@@ -99,22 +107,29 @@ public class ViewStudyServlet extends SecureController {
             //security checks
             if (fp.getRequest().getMethod().contains("POST")){
             	DatariverEnrollmentEnableLogBean log = new DatariverEnrollmentEnableLogBean(new Date(),ub.getId() );
+            	StudyBean sb;
             	if (fp.getString("submit").equals("Disable")||fp.getString("submit").equals("Enable")){	
             		int idToChange=fp.getInt("enrChangeId");
+            		sb = (StudyBean) sdao.findByPK(idToChange);
             		boolean currEn=Boolean.parseBoolean(fp.getString("enrChangeBool"));
             		log.setStudyId(idToChange);
             		log.setEnrollmentEnabledNewStatus(!currEn);
             		getDatariverEnrollmentEnableDAO().changeEnable(idToChange,!currEn);
+            		this.sendDatariverEmailEnrollment(currEn==true?1:2, studyId, sb.getParentStudyId() > 0 ? sdao.findByPK(sb.getParentStudyId()).getName() + ", " + sb.getAbbreviatedName() : sb.getAbbreviatedName());
             	} else if (fp.getString("submit").contains("Enable All")){
             		int idParentToChange=fp.getInt("studyToChange");
+            		sb = (StudyBean) sdao.findByPK(idParentToChange);
             		log.setStudyId(idParentToChange);
             		log.setEnrollmentEnabledNewStatus(true);
             		getDatariverEnrollmentEnableDAO().updateChildOfAStudy(studyId,true);
+            		this.sendDatariverEmailEnrollment(2, studyId, sb.getParentStudyId() > 0 ? sdao.findByPK(sb.getParentStudyId()).getName() + ", " + sb.getAbbreviatedName() : sb.getAbbreviatedName());
             	} else if (fp.getString("submit").contains("Disable All")){
             		int idParentToChange=fp.getInt("studyToChange");
+            		sb = (StudyBean) sdao.findByPK(idParentToChange);
             		log.setStudyId(idParentToChange);
             		log.setEnrollmentEnabledNewStatus(false);
             		getDatariverEnrollmentEnableDAO().updateChildOfAStudy(studyId,false);
+            		this.sendDatariverEmailEnrollment(1, studyId, sb.getParentStudyId() > 0 ? sdao.findByPK(sb.getParentStudyId()).getName() + ", " + sb.getAbbreviatedName() : sb.getAbbreviatedName());
             	}
             	getDatariverEnrollmentEnableLogDAO().insertLog(log);
             }
@@ -127,28 +142,32 @@ public class ViewStudyServlet extends SecureController {
             study = scs.setParametersForStudy(study);
 
             StudyParameterValueDAO spvdao = new StudyParameterValueDAO(sm.getDataSource());
-            String randomizationStatusInOC = spvdao.findByHandleAndStudy(study.getId(), "randomization").getValue();
-            String participantStatusInOC = spvdao.findByHandleAndStudy(study.getId(), "participantPortal").getValue();
-            if(participantStatusInOC=="") participantStatusInOC="disabled";
-            if(randomizationStatusInOC=="") randomizationStatusInOC="disabled";
-
-            RandomizationRegistrar randomizationRegistrar = new RandomizationRegistrar();
-            SeRandomizationDTO seRandomizationDTO = randomizationRegistrar.getCachedRandomizationDTOObject(study.getOid(), false);
-
-            if (seRandomizationDTO!=null && seRandomizationDTO.getStatus().equalsIgnoreCase("ACTIVE") && randomizationStatusInOC.equalsIgnoreCase("enabled")){
-                study.getStudyParameterConfig().setRandomization("enabled");
-            }else{
-                study.getStudyParameterConfig().setRandomization("disabled");
-             };
-
-
-             ParticipantPortalRegistrar  participantPortalRegistrar = new ParticipantPortalRegistrar();
-             String pStatus = participantPortalRegistrar.getCachedRegistrationStatus(study.getOid(), session);
-             if (participantPortalRegistrar!=null && pStatus.equalsIgnoreCase("ACTIVE") && participantStatusInOC.equalsIgnoreCase("enabled")){
-                 study.getStudyParameterConfig().setParticipantPortal("enabled");
-             }else{
-                 study.getStudyParameterConfig().setParticipantPortal("disabled");
-              };
+            
+            //+DR modified by DataRiver (EC) 08/11/2018
+            //commented to prevent conflicts with DR randomization feature
+//            String randomizationStatusInOC = spvdao.findByHandleAndStudy(study.getId(), "randomization").getValue();
+//            String participantStatusInOC = spvdao.findByHandleAndStudy(study.getId(), "participantPortal").getValue();
+//            if(participantStatusInOC=="") participantStatusInOC="disabled";
+//            if(randomizationStatusInOC=="") randomizationStatusInOC="disabled";
+//
+//            RandomizationRegistrar randomizationRegistrar = new RandomizationRegistrar();
+//            SeRandomizationDTO seRandomizationDTO = randomizationRegistrar.getCachedRandomizationDTOObject(study.getOid(), false);
+//
+//            if (seRandomizationDTO!=null && seRandomizationDTO.getStatus().equalsIgnoreCase("ACTIVE") && randomizationStatusInOC.equalsIgnoreCase("enabled")){
+//                study.getStudyParameterConfig().setRandomization("enabled");
+//            }else{
+//                study.getStudyParameterConfig().setRandomization("disabled");
+//             };
+//
+//
+//             ParticipantPortalRegistrar  participantPortalRegistrar = new ParticipantPortalRegistrar();
+//             String pStatus = participantPortalRegistrar.getCachedRegistrationStatus(study.getOid(), session);
+//             if (participantPortalRegistrar!=null && pStatus.equalsIgnoreCase("ACTIVE") && participantStatusInOC.equalsIgnoreCase("enabled")){
+//                 study.getStudyParameterConfig().setParticipantPortal("enabled");
+//             }else{
+//                 study.getStudyParameterConfig().setParticipantPortal("disabled");
+//              };            
+            //+DR end modified by DataRiver (EC) 08/11/2018
 
 
             request.setAttribute("studyToView", study);
@@ -263,5 +282,53 @@ public class ViewStudyServlet extends SecureController {
     	}
     	return tmp;
     }
+    
+    /**
+     * +DR added by DataRiver - Fabio Benedetti 26/06/2014, Enrico Calanchi 06/11/2018
+     * 
+	 * Sent an email when a Enrollment is enable or disable
+	 * type 1 -> disable
+	 * type 2 -> enable
+	 */
+	public Boolean sendDatariverEmailEnrollment(int type, int studyId, String protocol) {
+		
+		Boolean messageSent = false;
+		DatariverEmailBean datariverEmail = getDatariverEmailDao().getDatariverEmailEnrollment(studyId, type);
+	    
+		if (datariverEmail != null){
+	    	String email_subject = datariverEmail.getSubject();
+	    	String recipients = ub.getEmail() == "" ? datariverEmail.getRecipients() : ub.getEmail() + ", " + datariverEmail.getRecipients();
+	    	String bcc = datariverEmail.getBcc();
+	    	String body = datariverEmail.getHtmlBody();
+	    	String sender = datariverEmail.getSender();
+	    	
+	    	//email parameters
+	    	email_subject = email_subject.replaceAll("\\{protocol\\}", protocol);
+	    	email_subject = email_subject.replaceAll("\\{user\\}", ub.getName());	    	
+	    		
+	    	body = body.replaceAll("\\{protocol\\}", protocol);
+	    	body = body.replaceAll("\\{user\\}", ub.getName());
+	    	
+	//	    	System.out.println("subject: " + email_subject);
+	//		    System.out.println("body: " + body);
+		
+	    	messageSent = sendBackgroundEmail(recipients, bcc, sender, email_subject, body, true, datariverEmail.getAttachmentPath());		
+			
+	    	//log email with filename [STUDYNAME]_[enrollment_disable|enrollment_enable]_yyyy-MM-dd_HHmmssS.html
+	    	logDatariverEmail(
+	    		messageSent ? "sent" : "failed", 
+	    		body, 
+	    		datariverEmail.getEmailId(), 
+	    		datariverEmail.getEmailTypeId(), 
+	    		email_subject, 
+	    		recipients, 
+	    		sender, 
+	    		bcc, 
+	    		ub, 
+	    		currentStudy.getAbbreviatedName());		                                	
+		}
+		
+        return messageSent;
+	}
 
 }
