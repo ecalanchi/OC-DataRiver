@@ -279,10 +279,10 @@ public abstract class DataEntryServlet extends CoreSecureController {
 	}
 	//+DR added by DataRiver (EC) 28/11/2017 
     
-    //+DR added by DataRiver (EC) 02/05/2018
-	//hashset doesn't add duplicates
-	Set<String> listAdminEditItems = new HashSet<String>();
-	//+DR end added by DataRiver (EC) 02/05/2018
+//    //+DR added by DataRiver (EC) 02/05/2018
+//	//hashset doesn't add duplicates
+//	Set<String> listAdminEditItems = new HashSet<String>();
+//	//+DR end added by DataRiver (EC) 02/05/2018
 
 
 
@@ -988,6 +988,10 @@ public abstract class DataEntryServlet extends CoreSecureController {
             HashMap<String, DisplayItemGroupBean> changedItemsMap = new HashMap<String, DisplayItemGroupBean>();
             // key is itemid, value is set of itemdata-ordinal
             HashMap<Integer, TreeSet<Integer>> itemOrdinals = prepareItemdataOrdinals(request);
+            //+DR added by DataRiver (EC) 02/05/2018
+        	//hashset doesn't add duplicates
+        	Set<String> listAdminEditItems = new HashSet<String>();
+        	//+DR end added by DataRiver (EC) 02/05/2018
 
             // prepare item data for scoring
             updateDataOrdinals(allItems);
