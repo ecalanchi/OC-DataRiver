@@ -162,6 +162,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
     public static final String INPUT_EVENT_CRF = "event";
 
     public static final String INPUT_SECTION = "section";
+    public static final String AE_CHANGED_ITEMS = "listAdminEditItems";
 
     /**
      * A bean used to indicate that servlets to which this servlet forwards should ignore any parameters, in particular the "submitted" parameter which controls
@@ -524,6 +525,11 @@ public abstract class DataEntryServlet extends CoreSecureController {
                 } else
                     response.sendRedirect(response.encodeRedirectURL("ListStudySubjects"));
             }
+            
+            sendAdministrativeEditingEmail(request,
+					ecb, session, currentStudy, ub,
+					ssb);
+            
             // forwardPage(Page.SUBMIT_DATA_SERVLET);
             return;
         }
@@ -991,6 +997,9 @@ public abstract class DataEntryServlet extends CoreSecureController {
             //+DR added by DataRiver (EC) 02/05/2018
         	//hashset doesn't add duplicates
         	Set<String> listAdminEditItems = new HashSet<String>();
+        	if (session.getAttribute(AE_CHANGED_ITEMS) != null) {
+        		listAdminEditItems = (Set<String>) session.getAttribute(AE_CHANGED_ITEMS);
+        	}
         	//+DR end added by DataRiver (EC) 02/05/2018
 
             // prepare item data for scoring
@@ -1332,6 +1341,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
                 	for (String ic : changedItems) {
                     	listAdminEditItems.add(ic);
                     	}
+                	session.setAttribute(AE_CHANGED_ITEMS, listAdminEditItems);
                 	//+DR end added by DataRiver (EC) 02/05/2018
                 	
                     LOGGER.debug("found admin force reason for change: changed items " + changedItems.toString() + " and changed items list: "
@@ -2191,7 +2201,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                 session.removeAttribute(DDE_PROGESS);
                                 session.removeAttribute("to_create_crf");
 
-                                request.setAttribute("eventId", new Integer(ecb.getStudyEventId()).toString());
+                                request.setAttribute("eventId", new Integer(ecb.getStudyEventId()).toString());                               
                                 forwardPage(Page.ENTER_DATA_FOR_STUDY_EVENT_SERVLET, request, response);
                             } else {
                                 // use clicked 'save'
@@ -2225,58 +2235,12 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                     }
                                     session.removeAttribute(instantAtt);
                                     
-                                    //+DR added by DataRiver (EC) 02/05/2018
-                                    if (this.isAdminForcedReasonForChange(request) && this.isAdministrativeEditing() && errors.isEmpty()) {
-	                                    //System.out.println("##### administrative editing concluded #####");
-                                    	String body = "";
-                                        String emailSubject = "";
-                                        Integer parentStudyId = null;
-                                                                             
-                                        DatariverEmailBean deb = (DatariverEmailBean) getDatariverEmailDao().getDatariverEmailAdminEdit(study.getParentStudyId()>0 ? study.getParentStudyId() : study.getId());
-	                            		Boolean messageSent = false;
-    	                            	
-    	                            	//check deb
-    	                            	if (deb != null){
-	    	                            	//send email after checks	                            		
-		                            		body = deb.getHtmlBody();
-		                            		
-		                                    //update list with items changed in last tab
-		                            		for (String ic : changedItems) {
-		                                    	listAdminEditItems.add(ic);
-		                                    	}
-		                            		//iterate through the set and add HTML
-		                            		String listAdminEditItemsHtml = "";
-		                                    for (String str : listAdminEditItems) {
-		                                    	listAdminEditItemsHtml += str + "<br />";
-		                                    }
-		                                    body = body.replaceAll("\\{list\\}", listAdminEditItemsHtml);
-		                                    body = body.replaceAll("\\{timestamp\\}", "" + new SimpleDateFormat("dd/MM/yyyy HH:mm.ss").format(new Date()));
-		                                    
-			                                body = setEmailParameters(body, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
-		                                    
-		                            		emailSubject = deb.getSubject();
-		                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
-			                                	                            	                                		                                	                                
-			                                String recipients = deb.getRecipients().trim();
-	
-		                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
-		                    					                    			
-			                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
-			                    	    	logDatariverEmail(
-			                    		    		messageSent ? "sent" : "failed", 
-			                    		    		body, 
-			                    		    		deb.getEmailId(), 
-			                    		    		deb.getEmailTypeId(), 
-			                    		    		emailSubject, 
-			                    		    		recipients, 
-			                    		    		deb.getSender(), 
-			                    		    		deb.getBcc(), 
-			                    		    		ub, 
-			                    		    		currentStudy.getAbbreviatedName());	
-	            		                    			
-	                                    }
-	                            	}
-                                    //+DR end added by DataRiver (EC) 02/05/2018
+                                    sendAdministrativeEditingEmail(request,
+											ecb, session, currentStudy, ub,
+											ssb, study, studyEventBean,
+											studyEventDefinition,
+											crfVersionBean, section,
+											changedItems, listAdminEditItems);
                                     
                                     forwardPage(Page.ENTER_DATA_FOR_STUDY_EVENT_SERVLET, request, response);
                                     return;
@@ -2293,7 +2257,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                 if (!section.isLastSection()) {
                                     request.setAttribute("tab", new Integer(tabNum + 1).toString());
                                 }
-
+                                
                               //  forwardPage(getServletPage(request), request, response);
                                 getServletContext().getRequestDispatcher(getServletPage(request)).forward(request, response);
                             }
@@ -2307,6 +2271,100 @@ public abstract class DataEntryServlet extends CoreSecureController {
         }
 
     }
+
+	private void sendAdministrativeEditingEmail(HttpServletRequest request,
+			EventCRFBean ecb, HttpSession session, StudyBean currentStudy,
+			UserAccountBean ub, StudySubjectBean ssb) {
+		if (this.isAdminForcedReasonForChange(request) && this.isAdministrativeEditing() && errors.isEmpty()) {
+		
+		StudyBean study = (StudyBean) session.getAttribute("study"); 
+		StudyEventDAO seDao = new StudyEventDAO(getDataSource());
+		StudyEventBean studyEventBean = (StudyEventBean) seDao.findByPK(ecb.getStudyEventId());
+		EventDefinitionCRFDAO  edcdao = new EventDefinitionCRFDAO(getDataSource());
+		EventDefinitionCRFBean edcBean = edcdao.findByStudyEventIdAndCRFVersionId(study, ecb.getStudyEventId(), ecb.getCRFVersionId());
+		StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(getDataSource());
+		StudyEventDefinitionBean studyEventDefinition = (StudyEventDefinitionBean) seddao.findByPK(edcBean.getStudyEventDefinitionId());
+		CRFVersionDAO cvdao = new CRFVersionDAO(getDataSource());
+		CRFVersionBean crfVersionBean = (CRFVersionBean) cvdao.findByPK(ecb.getCRFVersionId());
+		DisplaySectionBean section = new DisplaySectionBean();
+		CRFDAO cdao = new CRFDAO(getDataSource());
+		CRFBean cb = (CRFBean) cdao.findByPK(crfVersionBean.getCrfId());
+		section.setCrf(cb);
+		Set<String> listAdminEditItems = (Set<String>) session.getAttribute(AE_CHANGED_ITEMS);
+		
+        sendAdministrativeEditingEmail(request,
+				ecb, session, currentStudy, ub,
+				ssb, study, studyEventBean,
+				studyEventDefinition,
+				crfVersionBean, section,
+				new TreeSet<String>(), listAdminEditItems);
+        }
+		
+	}
+    
+	private void sendAdministrativeEditingEmail(HttpServletRequest request,
+			EventCRFBean ecb, HttpSession session, StudyBean currentStudy,
+			UserAccountBean ub, StudySubjectBean ssb, StudyBean study,
+			StudyEventBean studyEventBean,
+			StudyEventDefinitionBean studyEventDefinition,
+			CRFVersionBean crfVersionBean, DisplaySectionBean section,
+			TreeSet<String> changedItems, Set<String> listAdminEditItems) {
+		
+		//+DR added by DataRiver (EC) 02/05/2018
+		if (this.isAdminForcedReasonForChange(request) && this.isAdministrativeEditing() && errors.isEmpty()) {
+		    //System.out.println("##### administrative editing concluded #####");
+			String body = "";
+		    String emailSubject = "";
+		    Integer parentStudyId = null;
+		                                         
+		    DatariverEmailBean deb = (DatariverEmailBean) getDatariverEmailDao().getDatariverEmailAdminEdit(study.getParentStudyId()>0 ? study.getParentStudyId() : study.getId());
+			Boolean messageSent = false;
+			
+			//check deb
+			if (deb != null){
+		    	//send email after checks	                            		
+				body = deb.getHtmlBody();
+				
+		        //update list with items changed in last tab
+				for (String ic : changedItems) {
+		        	listAdminEditItems.add(ic);
+		        	}
+				//iterate through the set and add HTML
+				String listAdminEditItemsHtml = "";
+		        for (String str : listAdminEditItems) {
+		        	listAdminEditItemsHtml += str + "<br />";
+		        }
+		        body = body.replaceAll("\\{list\\}", listAdminEditItemsHtml);
+		        body = body.replaceAll("\\{timestamp\\}", "" + new SimpleDateFormat("dd/MM/yyyy HH:mm.ss").format(new Date()));
+		        
+		        body = setEmailParameters(body, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+		        
+				emailSubject = deb.getSubject();
+				emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+		        	                            	                                		                                	                                
+		        String recipients = deb.getRecipients().trim();
+
+				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
+					                    			
+				//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+		    	logDatariverEmail(
+			    		messageSent ? "sent" : "failed", 
+			    		body, 
+			    		deb.getEmailId(), 
+			    		deb.getEmailTypeId(), 
+			    		emailSubject, 
+			    		recipients, 
+			    		deb.getSender(), 
+			    		deb.getBcc(), 
+			    		ub, 
+			    		currentStudy.getAbbreviatedName());	
+		        			
+		    }
+		}
+		//+DR end added by DataRiver (EC) 02/05/2018
+
+		session.removeAttribute(AE_CHANGED_ITEMS);
+	}
     protected boolean writeDN(DisplayItemBean displayItem)
     {
     	boolean writeDN=true;
