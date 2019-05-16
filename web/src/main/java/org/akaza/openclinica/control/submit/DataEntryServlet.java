@@ -2343,7 +2343,8 @@ public abstract class DataEntryServlet extends CoreSecureController {
 				emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, section.getCrf(), studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
 		        	                            	                                		                                	                                
 		        String recipients = deb.getRecipients().trim();
-
+		        
+		        LOGGER.debug("Administrative Editing Item list for DataRiver email: " + listAdminEditItems);
 				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath()); 
 					                    			
 				//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
