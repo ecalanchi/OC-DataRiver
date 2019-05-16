@@ -11,7 +11,7 @@
 	<modules>
 		<module>core</module>
 		<module>web</module>
-		<module>ws</module>
+		<!-- module>ws</module -->
 	</modules>
 
 	<properties>
@@ -22,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- Project's source control URL -->
-		<git.url>git://github.com/OpenClinica/OpenClinica.git</git.url>
+		<git.url>https://github.com/ecalanchi/OC-DataRiver.git</git.url>
 
 		<!-- Config file - required by liquibase plugin -->
 		<config.file>src/main/resources/datainfo.properties</config.file>
