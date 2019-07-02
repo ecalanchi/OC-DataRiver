@@ -1,6 +1,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page import="org.akaza.openclinica.i18n.util.ResourceBundleProvider" %>
+<!-- //+DR added by DataRiver (EC) 01/07/2019 -->
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<!-- //+DR end added by DataRiver (EC) 01/07/2019 -->
 
 <fmt:setBundle basename="org.akaza.openclinica.i18n.workflow" var="resworkflow"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.words" var="resword"/>
@@ -112,17 +115,21 @@
                                         <c:if test="${userRole.researchAssistant || userRole.researchAssistant2}">
                                             <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                             <li><a href="${urlPrefix}ListStudySubjects"><fmt:message key="nav_subject_matrix" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-                                            <c:if test="${study.status.available && study.enrollmentEn}">
+                                            <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+                                            <c:if test="${study.status.available && study.enrollmentEn && !(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
                                                 <li><a href="${urlPrefix}AddNewSubject"><fmt:message key="nav_add_subject" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                             </c:if>
+                                            <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
                                             <li><a href="${urlPrefix}ViewNotes?module=submit"><fmt:message key="nav_notes_and_discrepancies" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                         </c:if>
                                         <c:if test="${userRole.investigator}">
                                             <li><a href="${urlPrefix}MainMenu"><fmt:message key="nav_home" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                             <li><a href="${urlPrefix}ListStudySubjects"><fmt:message key="nav_subject_matrix" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-                                            <c:if test="${study.status.available && study.enrollmentEn}">
+                                            <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+                                            <c:if test="${study.status.available && study.enrollmentEn && !(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
                                                 <li><a href="${urlPrefix}AddNewSubject"><fmt:message key="nav_add_subject" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                             </c:if>
+                                            <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
                                             <li><a href="${urlPrefix}ViewNotes?module=submit"><fmt:message key="nav_notes_and_discrepancies" bundle="${resword}"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;</li>
                                         </c:if>
                                         <c:if test="${userRole.monitor }">
@@ -201,9 +208,11 @@
         <div class="taskGroup"><fmt:message key="nav_submit_data" bundle="${resword}"/></div>
         <div class="taskLeftColumn">
             <div class="taskLink"><a href="${urlPrefix}ListStudySubjects"><fmt:message key="nav_subject_matrix" bundle="${resword}"/></a></div>
-            <c:if test="${study.status.available && study.enrollmentEn}">
+            <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+            <c:if test="${study.status.available && study.enrollmentEn && !(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
                 <div class="taskLink"><a href="${urlPrefix}AddNewSubject"><fmt:message key="nav_add_subject" bundle="${resword}"/></a></div>
             </c:if>
+            <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
             <div class="taskLink"><a href="${urlPrefix}ViewNotes?module=submit"><fmt:message key="nav_notes_and_discrepancies" bundle="${resword}"/></a></div>
         </div>
         <div class="taskRightColumn">
@@ -219,9 +228,11 @@
         <div class="taskGroup"><fmt:message key="nav_submit_data" bundle="${resword}"/></div>
         <div class="taskLeftColumn">
             <div class="taskLink"><a href="${urlPrefix}ListStudySubjects"><fmt:message key="nav_subject_matrix" bundle="${resword}"/></a></div>
-            <c:if test="${study.status.available && study.enrollmentEn}">
+            <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+            <c:if test="${study.status.available && study.enrollmentEn && !(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
                 <div class="taskLink"><a href="${urlPrefix}AddNewSubject"><fmt:message key="nav_add_subject" bundle="${resword}"/></a></div>
             </c:if>
+            <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
             <div class="taskLink"><a href="${urlPrefix}ViewNotes?module=submit"><fmt:message key="nav_notes_and_discrepancies" bundle="${resword}"/></a></div>
         </div>
         <div class="taskRightColumn">
@@ -245,9 +256,11 @@
         <div class="taskGroup"><fmt:message key="nav_submit_data" bundle="${resword}"/></div>
         <div class="taskLeftColumn">
             <div class="taskLink"><a href="${urlPrefix}ListStudySubjects"><fmt:message key="nav_subject_matrix" bundle="${resword}"/></a></div>
-            <c:if test="${study.status.available && study.enrollmentEn}">
+            <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+            <c:if test="${study.status.available && study.enrollmentEn && !(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
                 <div class="taskLink"><a href="${urlPrefix}AddNewSubject"><fmt:message key="nav_add_subject" bundle="${resword}"/></a></div>
             </c:if>
+            <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
             <div class="taskLink"><a href="${urlPrefix}ViewNotes?module=submit"><fmt:message key="nav_notes_and_discrepancies" bundle="${resword}"/></a></div>
         </div>
         <div class="taskRightColumn">

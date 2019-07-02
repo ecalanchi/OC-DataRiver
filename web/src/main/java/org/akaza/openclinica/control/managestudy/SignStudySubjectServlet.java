@@ -70,15 +70,21 @@ public class SignStudySubjectServlet extends SecureController {
 
         checkStudyLocked(Page.LIST_STUDY_SUBJECTS, respage.getString("current_study_locked"));
         mayAccess();
+        
+        //+DR added by DataRiver (EC) 01/07/2019
+        if (!ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
 
-        if (ub.isSysAdmin()) {
-            return;
+	        if (ub.isSysAdmin()) {
+	            return;
+	        }
+	
+	        if (currentRole.getRole().equals(Role.STUDYDIRECTOR) || currentRole.getRole().equals(Role.COORDINATOR)
+	            || currentRole.getRole().equals(Role.INVESTIGATOR)) {
+	            return;
+	        }
+	        
         }
-
-        if (currentRole.getRole().equals(Role.STUDYDIRECTOR) || currentRole.getRole().equals(Role.COORDINATOR)
-            || currentRole.getRole().equals(Role.INVESTIGATOR)) {
-            return;
-        }
+        //+DR end added by DataRiver (EC) 01/07/2019
 
         addPageMessage(respage.getString("no_have_correct_privilege_current_study") + " " + respage.getString("change_study_contact_sysadmin"));
         throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("not_study_director"), "1");

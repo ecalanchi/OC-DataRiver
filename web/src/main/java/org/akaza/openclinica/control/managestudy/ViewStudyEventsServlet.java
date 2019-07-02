@@ -137,7 +137,17 @@ public class ViewStudyEventsServlet extends SecureController {
         request.setAttribute(STATUS_MAP, SubjectEventStatus.toArrayList());
 
         StudyEventDefinitionDAO seddao = new StudyEventDefinitionDAO(sm.getDataSource());
-        ArrayList definitions = seddao.findAllByStudy(currentStudy);
+        
+        //+DR modified by DataRiver (EC) 01/07/2019
+        //ArrayList definitions = seddao.findAllByStudy(currentStudy);
+        ArrayList definitions;
+        if(ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        	definitions = seddao.findAllByStudySpecialist(currentStudy);
+        } else {
+        	definitions = seddao.findAllByStudy(currentStudy);
+        }
+        //+DR end modified by DataRiver (EC) 01/07/2019
+        
         request.setAttribute(DEFINITION_MAP, definitions);
 
         ArrayList allEvents = new ArrayList();

@@ -551,6 +551,19 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
 
         return executeFindAllQuery("findAllActiveByEventDefinitionId", variables);
     }
+        
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param eventDefinitionId
+     * @return
+     */
+    public ArrayList findAllActiveByEventDefinitionIdSpecialist(int eventDefinitionId) {
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(eventDefinitionId));
+
+        return executeFindAllQuery("findAllActiveByEventDefinitionIdSpecialist", variables);
+    }     
 
     /**
      * Find all active EventDefinitionCRFBean for the StudyBean and the
@@ -568,6 +581,23 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
         }
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Find all active EventDefinitionCRFBean for the StudyBean and the
+     * study_event_definition_id for Specialist User
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param study
+     * @param eventDefinitionId
+     * @return
+     */
+    public Collection findAllActiveByEventDefinitionIdSpecialist(StudyBean study, int eventDefinitionId) {
+        if (study.isSite(study.getParentStudyId())) {
+            return findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyIdSpecialist(eventDefinitionId, study.getId(), study.getParentStudyId());
+        } else {
+            return findAllActiveParentsByEventDefinitionIdSpecialist(eventDefinitionId);
+        }
+    }  
     
     public Collection findAllActiveByEventDefinitionIdandStudyId(int definitionId , int studyId) {
         this.setTypesExpected();
@@ -636,6 +666,28 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
         return al;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param definitionId
+     * @return
+     */
+    public Collection findAllActiveParentsByEventDefinitionIdSpecialist(int definitionId) {
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(definitionId));
+
+        String sql = digester.getQuery("findAllActiveParentsByEventDefinitionIdSpecialist");
+        ArrayList alist = this.select(sql, variables);
+        ArrayList al = new ArrayList();
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+            EventDefinitionCRFBean eb = (EventDefinitionCRFBean) this.getEntityFromHashMap((HashMap) it.next());
+            al.add(eb);
+        }
+        return al;
+    }  
+    
     public Collection findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyId(int definitionId, int siteId, int parentStudyId) {
         this.setTypesExpected();
         HashMap variables = new HashMap();
@@ -656,6 +708,34 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
         return al;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param definitionId
+     * @param siteId
+     * @param parentStudyId
+     * @return
+     */
+    public Collection findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyIdSpecialist(int definitionId, int siteId, int parentStudyId) {
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(definitionId));
+        variables.put(new Integer(2), new Integer(siteId));
+        variables.put(new Integer(3), new Integer(parentStudyId));
+        variables.put(new Integer(4), new Integer(definitionId));
+        variables.put(new Integer(5), new Integer(siteId));
+
+        String sql = digester.getQuery("findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyIdSpecialist");
+        ArrayList alist = this.select(sql, variables);
+        ArrayList al = new ArrayList();
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+            EventDefinitionCRFBean eb = (EventDefinitionCRFBean) this.getEntityFromHashMap((HashMap) it.next());
+            al.add(eb);
+        }
+        return al;
+    } 
+    
     public Collection findAllActiveNonHiddenByEventDefinitionIdAndStudy(int definitionId, StudyBean study) {
         ArrayList al = new ArrayList();
         this.setTypesExpected();
@@ -998,6 +1078,47 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
         return result;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Loads all {@link EventDefinitionCRFBean} associated to the list of
+     * {@link StudyEventDefinitionBean} for Specialist User
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param studySubjectId
+     * @param siteId
+     * @param parentStudyId
+     * @return
+     */
+    public Map<Integer, SortedSet<EventDefinitionCRFBean>> buildEventDefinitionCRFListByStudyEventDefinitionSpecialist(Integer studySubjectId, Integer siteId,
+            Integer parentStudyId) {
+        this.setTypesExpected(); // <== Must be called first
+
+        HashMap<Integer, Object> param = new HashMap<Integer, Object>();
+        int i = 1;
+        param.put(i++, studySubjectId);
+        param.put(i++, siteId);
+        param.put(i++, parentStudyId);
+        param.put(i++, studySubjectId);
+        param.put(i++, siteId);
+
+        List selectResult = select(digester.getQuery("buildEventDefinitionCRFListByStudyEventDefinitionSpecialist"), param);
+
+        Map<Integer, SortedSet<EventDefinitionCRFBean>> result = new HashMap<Integer, SortedSet<EventDefinitionCRFBean>>();
+        Iterator it = selectResult.iterator();
+        while (it.hasNext()) {
+            EventDefinitionCRFBean bean = (EventDefinitionCRFBean) this.getEntityFromHashMap((HashMap) it.next());
+            Integer studyEventDefinitionId = bean.getStudyEventDefinitionId();
+
+            if (!result.containsKey(studyEventDefinitionId)) {
+                result.put(studyEventDefinitionId, new TreeSet<EventDefinitionCRFBean>(new EventDefinitionCRFComparator()));
+            }
+            result.get(studyEventDefinitionId).add(bean);
+
+        }
+
+        return result;
+    }  
+    
     public Map<Integer, SortedSet<EventDefinitionCRFBean>> buildEventDefinitionCRFListByStudyEventDefinitionForStudy(Integer studySubjectId) {
         this.setTypesExpected(); // <== Must be called first
 
@@ -1023,6 +1144,37 @@ public class EventDefinitionCRFDAO extends AuditableEntityDAO {
         return result;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param studySubjectId
+     * @return
+     */
+    public Map<Integer, SortedSet<EventDefinitionCRFBean>> buildEventDefinitionCRFListByStudyEventDefinitionForStudySpecialist(Integer studySubjectId) {
+        this.setTypesExpected(); // <== Must be called first
+
+        HashMap<Integer, Object> param = new HashMap<Integer, Object>();
+        int i = 1;
+        param.put(i++, studySubjectId);
+
+        List selectResult = select(digester.getQuery("buildEventDefinitionCRFListByStudyEventDefinitionForStudySpecialist"), param);
+
+        Map<Integer, SortedSet<EventDefinitionCRFBean>> result = new HashMap<Integer, SortedSet<EventDefinitionCRFBean>>();
+        Iterator it = selectResult.iterator();
+        while (it.hasNext()) {
+            EventDefinitionCRFBean bean = (EventDefinitionCRFBean) this.getEntityFromHashMap((HashMap) it.next());
+            Integer studyEventDefinitionId = bean.getStudyEventDefinitionId();
+
+            if (!result.containsKey(studyEventDefinitionId)) {
+                result.put(studyEventDefinitionId, new TreeSet<EventDefinitionCRFBean>(new EventDefinitionCRFComparator()));
+            }
+            result.get(studyEventDefinitionId).add(bean);
+
+        }
+
+        return result;
+    }
+    
     private class EventDefinitionCRFComparator implements Comparator<EventDefinitionCRFBean> {
 
         @Override

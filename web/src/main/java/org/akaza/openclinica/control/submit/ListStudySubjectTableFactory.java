@@ -200,7 +200,11 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
          * adding information about enrollment enabling in sites
          */
         //boolean addSubjectLinkShow = studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR);
-        boolean addSubjectLinkShow = (studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR))&&studyBean.isEnrollmentEn();
+        //+DR modified by DataRiver (EC) 01/07/2019
+        boolean addSubjectLinkShow = (studyBean.getStatus().isAvailable() 
+        		&& !r.equals(Role.MONITOR))&&studyBean.isEnrollmentEn()
+        		&& !(currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]"));
+        //+DR end modified by DataRiver (EC) 01/07/2019
 
         tableFacade.setToolbar(new ListStudySubjectTableToolbar(getStudyEventDefinitions(), getStudyGroupClasses(), addSubjectLinkShow, showMoreLink));
     }
@@ -240,9 +244,31 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
             // Get All study events for this study subject and then put list in
             // HashMap with study event definition id as
             // key and a list of study events as the value.
-            List<StudyEventBean> allStudyEventsForStudySubject = getStudyEventDAO().findAllByStudySubject(studySubjectBean);
+            
+            //+DR modified by DataRiver (EC) 01/07/2019
+            //List<StudyEventBean> allStudyEventsForStudySubject = getStudyEventDAO().findAllByStudySubject(studySubjectBean);
+            List<StudyEventBean> allStudyEventsForStudySubject;
+            if(currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+            	allStudyEventsForStudySubject = getStudyEventDAO().findAllByStudySubjectSpecialist(studySubjectBean);
+            	//System.out.println("##### Lab user #####");
+            } else {
+            	allStudyEventsForStudySubject = getStudyEventDAO().findAllByStudySubject(studySubjectBean);
+            	//System.out.println("##### Normal user #####");
+            }
+            //+DR end modified by DataRiver (EC) 01/07/2019
+            
             HashMap<Integer, List<StudyEventBean>> allStudyEventsForStudySubjectBySedId = new HashMap<Integer, List<StudyEventBean>>();
-            theItem.put("isSignable", isSignable(allStudyEventsForStudySubject, studySubjectBean));
+            
+            //+DR modified by DataRiver (EC) 01/07/2019
+            //theItem.put("isSignable", isSignable(allStudyEventsForStudySubject, studySubjectBean));
+            if(currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+            	//Lab user
+            	theItem.put("isSignable", false);
+            } else {
+            	// Normal user
+            	theItem.put("isSignable", isSignable(allStudyEventsForStudySubject, studySubjectBean));
+            }
+            //+DR end modified by DataRiver (EC) 01/07/2019
 
             for (StudyEventBean studyEventBean : allStudyEventsForStudySubject) {
                 if (allStudyEventsForStudySubjectBySedId.get(studyEventBean.getStudyEventDefinitionId()) == null) {
@@ -412,11 +438,32 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
 
     private ArrayList<StudyEventDefinitionBean> getStudyEventDefinitions() {
         if (this.studyEventDefinitions == null) {
-            if (studyBean.getParentStudyId() > 0) {
-                studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getParentStudyId());
-            } else {
-                studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getId());
-            }
+        	
+        	//+DR modified by DataRiver (EC) 01/07/2019
+        	
+            //if (studyBean.getParentStudyId() > 0) {
+            //    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getParentStudyId());
+            //} else {
+            //    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getId());
+            //}
+        	
+        	if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        		//Specialist
+                if (studyBean.getParentStudyId() > 0) {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyIdSpecialist(studyBean.getParentStudyId());
+                } else {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyIdSpecialist(studyBean.getId());
+                }                
+        	} else {
+        		//Normal user
+                if (studyBean.getParentStudyId() > 0) {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getParentStudyId());
+                } else {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getId());
+                }    
+        	}            
+            //+DR end modified by DataRiver (EC) 01/07/2019
+        	
         }
         return this.studyEventDefinitions;
     }

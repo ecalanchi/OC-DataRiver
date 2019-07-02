@@ -127,7 +127,17 @@ public class ViewStudySubjectServlet extends SecureController {
         StudySubjectDAO ssdao = new StudySubjectDAO(ds);
         StudyDAO sdao = new StudyDAO(ds);
 
-        ArrayList events = sedao.findAllByStudySubject(studySub);
+        //+DR modified by DataRiver (EC) 01/07/2019
+        //ArrayList events = sedao.findAllByStudySubject(studySub);
+        ArrayList events;       
+	    if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+	    	//Specialist
+	    	events = sedao.findAllByStudySubjectSpecialist(studySub);
+	    } else {
+	    	//Normal user
+	    	events = sedao.findAllByStudySubject(studySub);	    		    	
+	    }        
+        //+DR end modified by DataRiver (EC) 01/07/2019
 
         ArrayList displayEvents = new ArrayList();
         for (int i = 0; i < events.size(); i++) {

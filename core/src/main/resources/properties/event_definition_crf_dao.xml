@@ -130,6 +130,19 @@
           order by ordinal asc
         </sql>
 	</query>
+	
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->		
+	<query>
+		<name>findAllActiveByEventDefinitionIdSpecialist</name>
+		<sql>
+          SELECT * FROM event_definition_crf
+          WHERE study_event_definition_id=? AND status_id=1 
+		  AND default_version_id IN (SELECT crf_version_id FROM crf_version WHERE LOWER(revision_notes) LIKE '%[lab]%')
+          ORDER BY ordinal ASC
+        </sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllActiveByEventDefinitionIdandStudyId</name>
 		<sql>
@@ -166,6 +179,19 @@
          order by ordinal asc
         </sql>
 	</query>
+	
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->	
+	<query>
+		<name>findAllActiveParentsByEventDefinitionIdSpecialist</name>
+		<sql>SELECT * FROM event_definition_crf
+         WHERE study_event_definition_id=? AND parent_id IS NULL
+		 AND default_version_id IN (SELECT crf_version_id FROM crf_version WHERE LOWER(revision_notes) LIKE '%[lab]%')
+         AND status_id=1
+         ORDER BY ordinal ASC
+        </sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyId</name>
 		<sql>SELECT * FROM EVENT_DEFINITION_CRF Where study_event_definition_id=?
@@ -176,6 +202,21 @@
 		     order by ordinal asc
 		</sql>
 	</query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->	 	
+	<query>
+		<name>findAllActiveByEventDefinitionIdAndSiteIdAndParentStudyIdSpecialist</name>
+		<sql>SELECT * FROM event_definition_crf WHERE study_event_definition_id=?
+		     AND (study_id=? OR study_id=?)
+			 AND default_version_id IN (SELECT crf_version_id FROM crf_version WHERE LOWER(revision_notes) LIKE '%[lab]%')
+		     AND event_definition_crf_id NOT IN (SELECT parent_id FROM event_definition_crf
+				WHERE study_event_definition_id=? AND study_id=?)
+				AND status_id=1
+		     ORDER BY ordinal ASC
+		</sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllActiveNonHiddenByEventDefinitionIdAndSite</name>
 		<sql>SELECT edc.* FROM EVENT_DEFINITION_CRF edc, study s Where edc.study_event_definition_id=?
@@ -306,6 +347,25 @@
             and study_id=?)
         </sql>
     </query>
+    
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->	    
+    <query>
+        <name>buildEventDefinitionCRFListByStudyEventDefinitionSpecialist</name>
+        <sql>
+            SELECT * FROM event_definition_crf WHERE study_event_definition_id IN (
+                SELECT study_event_definition_id FROM study_event_definition WHERE study_event_definition_id IN (
+                    SELECT DISTINCT study_event_definition_id FROM study_event WHERE study_subject_id = ?)) 
+            AND (study_id=? OR study_id=?) 
+			AND default_version_id IN (SELECT crf_version_id FROM crf_version WHERE LOWER(revision_notes) LIKE '%[lab]%')
+            AND event_definition_crf_id NOT IN (
+                SELECT parent_id FROM event_definition_crf WHERE study_event_definition_id IN (
+                    SELECT study_event_definition_id FROM study_event_definition WHERE study_event_definition_id IN (
+                    SELECT DISTINCT study_event_definition_id FROM study_event WHERE study_subject_id = ?))
+            AND study_id=?)
+        </sql>
+    </query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
     <query>
         <name>buildEventDefinitionCRFListByStudyEventDefinitionForStudy</name>
         <sql>
@@ -315,6 +375,20 @@
 	        and parent_id is null
         </sql>
     </query>
+    
+ <!-- +DR added by DataRiver (EC) 01/07/2019 -->	
+    <query>
+        <name>buildEventDefinitionCRFListByStudyEventDefinitionForStudySpecialist</name>
+        <sql>
+	        SELECT * FROM event_definition_crf WHERE study_event_definition_id IN (
+	        SELECT study_event_definition_id FROM study_event_definition WHERE study_event_definition_id IN (
+	        SELECT DISTINCT study_event_definition_id FROM study_event WHERE study_subject_id = ?)) 
+	        AND default_version_id IN (SELECT crf_version_id FROM crf_version WHERE LOWER(revision_notes) LIKE '%[lab]%')
+	        AND parent_id IS NULL
+        </sql>
+    </query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllCrfMigrationDoesNotPerform</name>
 		<sql>

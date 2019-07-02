@@ -66,6 +66,16 @@ public class ListEventsForSubjectsServlet extends SecureController {
             return;
         }
 
+        //+DR Added by DataRiver (EC) 01/07/2019
+        FormProcessor fp = new FormProcessor(request);          
+        StudyEventDefinitionBean temp = (StudyEventDefinitionBean) getStudyEventDefinitionDao().findByPK(fp.getInt("defId"));
+        
+        if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]") && !temp.getDescription().toLowerCase().contains("[lab]")){
+            addPageMessage(respage.getString("no_have_correct_privilege_current_study") + respage.getString("change_study_contact_sysadmin"));
+            throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("may_not_submit_data"), "1");
+        }
+        //+DR end added by DataRiver (EC) 01/07/2019
+
         if (SubmitDataServlet.mayViewData(ub, currentRole)) {
             return;
         }

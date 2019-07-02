@@ -142,7 +142,13 @@ public class UpdateProfileServlet extends SecureController {
         userBean1.setFirstName(fp.getString("firstName"));
         userBean1.setLastName(fp.getString("lastName"));
         userBean1.setEmail(fp.getString("email"));
-        userBean1.setInstitutionalAffiliation(fp.getString("institutionalAffiliation"));
+
+        //+DR end modified by DataRiver (EC) 01/07/2019
+        //prevent specialist user to change his Institutional
+        //userBean1.setInstitutionalAffiliation(fp.getString("institutionalAffiliation"));
+        if (!userBean1.getInstitutionalAffiliation().toLowerCase().contains("[lab]")) userBean1.setInstitutionalAffiliation(fp.getString("institutionalAffiliation"));
+        //+DR end modified by DataRiver (EC) 01/07/2019
+
         userBean1.setPasswdChallengeQuestion(fp.getString("passwdChallengeQuestion"));
         userBean1.setPasswdChallengeAnswer(fp.getString("passwdChallengeAnswer"));
         userBean1.setPhone(fp.getString("phone"));

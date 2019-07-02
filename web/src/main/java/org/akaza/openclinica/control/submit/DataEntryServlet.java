@@ -278,7 +278,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
 		randomizationCustomDao = this.randomizationCustomDao != null ? randomizationCustomDao : (RandomizationCustomDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationCustomDao");
 		return randomizationCustomDao;
 	}
-	//+DR added by DataRiver (EC) 28/11/2017 
+	//+DR end added by DataRiver (EC) 28/11/2017 
     
 //    //+DR added by DataRiver (EC) 02/05/2018
 //	//hashset doesn't add duplicates
@@ -5968,6 +5968,18 @@ String tempKey = idb.getItemId()+","+idb.getOrdinal();
                 addPageMessage(respage.getString("required_event_CRF_belong"), request);
                 throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("entity_not_belong_studies"), "1");
             }
+            
+            //+DR added by DataRiver (EC) 01/07/2019
+            EventCRFBean ecbAccess = (EventCRFBean) edao.findByPK(eventCRFId);
+            CRFVersionDAO cvdAccess = new CRFVersionDAO(getDataSource());
+            CRFVersionBean cvbAccess = (CRFVersionBean) cvdAccess.findByPK(ecbAccess.getCRFVersionId());
+            //System.out.println("##### User: " + ub.getName() + "; Institution: " + ub.getInstitutionalAffiliation() + "; CRF version: " + cvbAccess.getId() + " - " + cvbAccess.getDescription());
+            if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]") && !cvbAccess.getRevisionNotes().toLowerCase().contains("[lab]")) {
+            	addPageMessage(respage.getString("required_event_CRF_belong"), request);
+            	throw new InsufficientPermissionException(Page.MENU_SERVLET, resexception.getString("entity_not_belong_studies"), "1");
+            }
+            //+DR end added by DataRiver (EC) 01/07/2019
+            
         }
     }
 

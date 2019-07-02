@@ -134,8 +134,22 @@ public class CreateNewStudyEventServlet extends SecureController {
             studyWithEventDefinitions = new StudyBean();
             studyWithEventDefinitions.setId(currentStudy.getParentStudyId());
         }
+        
+        //+DR modified by DataRiver (EC) 01/07/2019
+        //// find all active definitions with CRFs
+        //ArrayList eventDefinitions = seddao.findAllActiveByStudy(studyWithEventDefinitions);       
+        ArrayList eventDefinitions;
+        
         // find all active definitions with CRFs
-        ArrayList eventDefinitions = seddao.findAllActiveByStudy(studyWithEventDefinitions);
+	    if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+	    	//Specialist
+	    	eventDefinitions = seddao.findAllActiveByStudySpecialist(studyWithEventDefinitions);
+	    } else {
+	    	//Normal user
+	    	eventDefinitions = seddao.findAllActiveByStudy(studyWithEventDefinitions);	    		    	
+	    }
+	    //+DR modified by DataRiver (EC) 01/07/2019
+        
         // EventDefinitionCRFDAO edcdao = new
         // EventDefinitionCRFDAO(sm.getDataSource());
         // ArrayList definitionsWithCRF = new ArrayList();

@@ -63,20 +63,62 @@ public class StudySubjectServiceImpl implements StudySubjectService {
         CRFDAO crfDao = new CRFDAO(dataSource);
         CRFVersionDAO crfVersionDao = new CRFVersionDAO(dataSource);
 
-        ArrayList events = studyEventDao.findAllByStudySubject(studySubject);
-
-        Map<Integer, StudyEventDefinitionBean> eventDefinitionByEvent = studyEventDefinitionDao.findByStudySubject(studySubject.getId());
-
-        StudyBean study = (StudyBean) studyDao.findByPK(studySubject.getStudyId());
-
-        Map<Integer, SortedSet<EventDefinitionCRFBean>> eventDefinitionCrfByStudyEventDefinition;
-        if (study.getParentStudyId() < 1) { // Is a study
-            eventDefinitionCrfByStudyEventDefinition = eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinitionForStudy(studySubject.getId());
-        } else { // Is a site
-            eventDefinitionCrfByStudyEventDefinition =
-                eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinition(studySubject.getId(), study.getId(), study.getParentStudyId());
+        //+DR modified by DataRiver (EC) 01/07/2019
+        
+		//ArrayList events = studyEventDao.findAllByStudySubject(studySubject);
+		//
+		//Map<Integer, StudyEventDefinitionBean> eventDefinitionByEvent = studyEventDefinitionDao.findByStudySubject(studySubject.getId());
+		//
+		//StudyBean study = (StudyBean) studyDao.findByPK(studySubject.getStudyId());
+		//
+		//Map<Integer, SortedSet<EventDefinitionCRFBean>> eventDefinitionCrfByStudyEventDefinition;
+		//if (study.getParentStudyId() < 1) { // Is a study
+		//    eventDefinitionCrfByStudyEventDefinition = eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinitionForStudy(studySubject.getId());
+		//} else { // Is a site
+		//    eventDefinitionCrfByStudyEventDefinition =
+		//        eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinition(studySubject.getId(), study.getId(), study.getParentStudyId());
+		//}
+        
+        //filter event list for Specialist user
+        ArrayList events;
+        Map<Integer, StudyEventDefinitionBean> eventDefinitionByEvent;
+        
+        if (userAccount.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        	//Specialist
+        	events = studyEventDao.findAllByStudySubjectSpecialist(studySubject);
+        	eventDefinitionByEvent = studyEventDefinitionDao.findByStudySubjectSpecialist(studySubject.getId());
+        } else {
+        	//Normal user
+        	events = studyEventDao.findAllByStudySubject(studySubject);
+        	eventDefinitionByEvent = studyEventDefinitionDao.findByStudySubject(studySubject.getId());
         }
+        
+        StudyBean study = (StudyBean) studyDao.findByPK(studySubject.getStudyId());
+        
+        Map<Integer, SortedSet<EventDefinitionCRFBean>> eventDefinitionCrfByStudyEventDefinition;
 
+        //filter crf events for Specialist user
+        if (study.getParentStudyId() < 1) { // Is a study
+            if (userAccount.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+            	//Specialist
+            	eventDefinitionCrfByStudyEventDefinition = eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinitionForStudySpecialist(studySubject.getId());
+            } else {
+            	//Normal user
+            	eventDefinitionCrfByStudyEventDefinition = eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinitionForStudy(studySubject.getId());
+            }
+        } else { // Is a site
+        	if (userAccount.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        		//Specialist
+        		eventDefinitionCrfByStudyEventDefinition =
+        				eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinitionSpecialist(studySubject.getId(), study.getId(), study.getParentStudyId());
+        	} else {
+        		//Normal user
+        		eventDefinitionCrfByStudyEventDefinition =
+        				eventDefinitionCrfDao.buildEventDefinitionCRFListByStudyEventDefinition(studySubject.getId(), study.getId(), study.getParentStudyId());
+        	}
+        }       
+        //+DR end modified by DataRiver (EC) 01/07/2019
+        
         Map<Integer, SortedSet<EventCRFBean>> eventCrfListByStudyEvent = eventCrfDao.buildEventCrfListByStudyEvent(studySubject.getId());
 
         Map<Integer, Integer> maxOrdinalByStudyEvent = studyEventDefinitionDao.buildMaxOrdinalByStudyEvent(studySubject.getId());

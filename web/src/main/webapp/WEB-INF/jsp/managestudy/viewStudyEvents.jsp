@@ -1,6 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<!-- //+DR added by DataRiver (EC) 01/07/2019 -->
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<!-- //+DR end added by DataRiver (EC) 01/07/2019 -->
 
 <fmt:setBundle basename="org.akaza.openclinica.i18n.format" var="resformat"/>
 <fmt:setBundle basename="org.akaza.openclinica.i18n.notes" var="restext"/>
@@ -110,7 +113,11 @@
   <td colspan="2"><div class="formfieldL_BG">
    <c:set var="definitionId1" value="${definitionId}"/>
       <select name="definitionId" class="formfieldL">
+	  <!-- //+DR modified by DataRiver (EC) 01/07/2019 -->
+      <c:if test="${!(fn:containsIgnoreCase(userBean.institutionalAffiliation, '[lab]'))}">
        <option value="0">--<fmt:message key="all" bundle="${resword}"/>--</option>
+      </c:if>
+      <!-- //+DR end modified by DataRiver (EC) 01/07/2019 -->
        <c:forEach var="definition" items="${definitions}">
        <c:choose>
         <c:when test="${definitionId1 == definition.id}">

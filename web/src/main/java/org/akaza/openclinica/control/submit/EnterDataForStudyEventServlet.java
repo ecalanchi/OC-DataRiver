@@ -171,7 +171,19 @@ public class EnterDataForStudyEventServlet extends SecureController {
 
         // prepare to figure out what the display should look like
         EventCRFDAO ecdao = new EventCRFDAO(sm.getDataSource());
-        ArrayList<EventCRFBean> eventCRFs = ecdao.findAllByStudyEvent(seb);
+        
+        //+DR modified by DataRiver (EC) 01/07/2019
+        //ArrayList<EventCRFBean> eventCRFs = ecdao.findAllByStudyEvent(seb);
+        ArrayList<EventCRFBean> eventCRFs; 
+        if(ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        	//Specialist
+        	eventCRFs = ecdao.findAllByStudyEventSpecialist(seb);
+        } else {
+        	//Normal User
+        	eventCRFs = ecdao.findAllByStudyEvent(seb);
+        }
+        //+DR end modified by DataRiver (EC) 01/07/2019
+        
         ArrayList<Boolean> doRuleSetsExist = new ArrayList<Boolean>();
         RuleSetDAO ruleSetDao = new RuleSetDAO(sm.getDataSource());
 
@@ -182,7 +194,18 @@ public class EnterDataForStudyEventServlet extends SecureController {
         }
 
         EventDefinitionCRFDAO edcdao = new EventDefinitionCRFDAO(sm.getDataSource());
-        ArrayList eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionId(study, seb.getStudyEventDefinitionId());
+        
+        //+DR modified by DataRiver (EC) 01/07/2019
+        //ArrayList eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionId(study, seb.getStudyEventDefinitionId());
+        ArrayList eventDefinitionCRFs;
+        if(ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        	//Specialist
+        	eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionIdSpecialist(study, seb.getStudyEventDefinitionId());
+        } else {
+        	//Normal User
+        	eventDefinitionCRFs = (ArrayList) edcdao.findAllActiveByEventDefinitionId(study, seb.getStudyEventDefinitionId());
+        }        
+        //+DR end modified by DataRiver (EC) 01/07/2019
 
         // get the event definition CRFs for which no event CRF exists
         // the event definition CRFs must be populated with versions so we can
@@ -262,6 +285,24 @@ public class EnterDataForStudyEventServlet extends SecureController {
         String exceptionName = resexception.getString("no_permission_to_submit_data");
         String noAccessMessage = respage.getString("may_not_enter_data_for_this_study");
 
+        //+DR added by DataRiver (EC) 01/07/2019
+        FormProcessor fp = new FormProcessor(request);  
+        StudyEventDefinitionDAO tempSEDDAO = new StudyEventDefinitionDAO(sm.getDataSource());
+        StudyEventBean tempSEB;
+		try {
+			tempSEB = getStudyEvent(fp.getInt(INPUT_EVENT_ID, true));
+		} catch (Exception e) {
+			throw new InsufficientPermissionException(Page.LIST_STUDY_SUBJECTS_SERVLET, exceptionName, "1");
+		}
+        StudyEventDefinitionBean tempSEDB = (StudyEventDefinitionBean) tempSEDDAO.findByPK(tempSEB.getStudyEventDefinitionId());
+//        System.out.println("description: " + tempBean.getDescription().toString());
+        
+        if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]") && !tempSEDB.getDescription().toLowerCase().contains("[lab]")){
+            addPageMessage(noAccessMessage);
+            throw new InsufficientPermissionException(Page.LIST_STUDY_SUBJECTS_SERVLET, exceptionName, "1");
+        }
+        //+DR end added by DataRiver (EC) 01/07/2019
+        
         if (SubmitDataServlet.mayViewData(ub, currentRole)) {
             return;
         }

@@ -1116,6 +1116,22 @@ public class StudyEventDAO extends AuditableEntityDAO implements Listener {
         return executeFindAllQuery("findAllByStudySubject", variables);
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Return Study events marked with "[Lab]" (case insensitive).
+     * TODO: make label parametric
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param ssb
+     * @return
+     */
+    public ArrayList findAllByStudySubjectSpecialist(StudySubjectBean ssb) {
+        HashMap variables = new HashMap();
+        variables.put(Integer.valueOf(1), Integer.valueOf(ssb.getId()));
+
+        return executeFindAllQuery("findAllByStudySubjectSpecialist", variables);
+    } 
+    
     public ArrayList findAllByStudySubjectAndDefinition(StudySubjectBean ssb, StudyEventDefinitionBean sed) {
         HashMap variables = new HashMap();
         variables.put(Integer.valueOf(1), Integer.valueOf(ssb.getId()));

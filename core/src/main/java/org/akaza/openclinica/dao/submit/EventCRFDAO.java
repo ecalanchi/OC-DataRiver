@@ -314,6 +314,19 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findAllByStudyEvent", variables);
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param studyEvent
+     * @return
+     */
+    public ArrayList findAllByStudyEventSpecialist(StudyEventBean studyEvent) {
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(studyEvent.getId()));
+
+        return executeFindAllQuery("findAllByStudyEventSpecialist", variables);
+    }
+    
     public ArrayList findAllByStudyEventAndStatus(StudyEventBean studyEvent, Status status) {
         HashMap variables = new HashMap();
         variables.put(new Integer(1), new Integer(studyEvent.getId()));
@@ -328,6 +341,19 @@ public class EventCRFDAO<K extends String, V extends ArrayList> extends Auditabl
         return executeFindAllQuery("findAllByStudySubject", variables);
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param studySubjectId
+     * @return
+     */
+    public ArrayList<EventCRFBean> findAllByStudySubjectSpecialist(int studySubjectId) {
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(studySubjectId));
+
+        return executeFindAllQuery("findAllByStudySubjectSpecialist", variables);
+    }
+    
     public List<EventCRFBean> findAllCRFMigrationReportList(CRFVersionBean sourceCrfVersionBean , CRFVersionBean targetCrfVersionBean ,ArrayList<String> studyEventDefnlist ,ArrayList<String>  sitelist) {
         HashMap<Integer, Object> variables = new HashMap();
         String eventStr =StringUtils.join(studyEventDefnlist, ",");

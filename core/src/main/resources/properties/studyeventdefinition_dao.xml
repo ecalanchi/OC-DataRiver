@@ -5,6 +5,16 @@
 		<sql>SELECT * FROM STUDY_EVENT_DEFINITION WHERE
 		STUDY_EVENT_DEFINITION_ID = ?</sql>
 	</query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->
+	<query>
+		<name>findByPKSpecialist</name>
+		<sql>SELECT * FROM STUDY_EVENT_DEFINITION WHERE
+		STUDY_EVENT_DEFINITION_ID = ?
+		AND LOWER(description) like '%[lab]%'</sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findByName</name>
 		<sql>SELECT * FROM STUDY_EVENT_DEFINITION WHERE
@@ -49,6 +59,21 @@
 				order by sed.ordinal asc
 		</sql>
 	</query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->
+	<query>
+		<name>findAllByStudySpecialist</name>
+		<sql>
+			SELECT sed.*
+			FROM STUDY_EVENT_DEFINITION sed, study st
+			WHERE sed.study_id = st.study_id
+				AND (st.study_id=? or st.parent_study_id=?)
+				AND LOWER(sed.description) like '%[lab]%'
+				order by sed.ordinal asc
+		</sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllActiveByStudy</name>
 		<sql>
@@ -60,6 +85,22 @@
 				order by sed.ordinal asc
 		</sql>
 	</query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->
+	<query>
+		<name>findAllActiveByStudySpecialist</name>
+		<sql>
+			SELECT sed.*
+			FROM STUDY_EVENT_DEFINITION sed, study st
+			WHERE sed.study_id = st.study_id
+				AND (st.study_id=? or st.parent_study_id=?)
+				AND sed.status_id=1
+				AND LOWER(sed.description) like '%[lab]%'
+				order by sed.ordinal asc
+		</sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
 	<query>
 		<name>findAllByStudyAndLimit</name>
 		<sql>
@@ -131,6 +172,22 @@
 				order by sed.ordinal asc
 		</sql>
 	</query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->
+	<query>
+		<name>findAllActiveByParentStudyIdSpecialist</name>
+		<sql>
+			SELECT sed.*
+			FROM STUDY_EVENT_DEFINITION sed, study st
+			WHERE sed.study_id = st.study_id
+				AND (st.study_id=?)
+				AND sed.status_id=1
+				AND LOWER(sed.description) like '%[lab]%'
+				order by sed.ordinal asc
+		</sql>
+	</query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
     <query>
         <name>findByStudySubject</name>
         <sql>
@@ -138,6 +195,18 @@
             select distinct study_event_definition_id from study_event where study_subject_id = ?)
         </sql>
     </query>
+
+<!-- +DR added by DataRiver (EC) 01/07/2019 -->
+	<query>
+        <name>findByStudySubjectSpecialist</name>
+        <sql>
+            select * from study_event_definition where study_event_definition_id in (
+            select distinct study_event_definition_id from study_event where study_subject_id = ?)
+            AND LOWER(description) like '%[lab]%'
+        </sql>
+    </query>
+<!-- +DR end added by DataRiver (EC) 01/07/2019 -->
+
     <query>
         <name>buildMaxOrdinalByStudyEvent</name>
         <sql>

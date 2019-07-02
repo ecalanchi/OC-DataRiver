@@ -276,6 +276,49 @@ public class StudyEventDefinitionDAO<K extends String,V extends ArrayList> exten
         }
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param study
+     * @return
+     */
+    public ArrayList findAllByStudySpecialist(StudyBean study) {
+    	
+        StudyDAO studyDao = new StudyDAO(this.getDs());
+        StudyBean parentStudy = new StudyBean();
+
+        if (study.getParentStudyId() > 0) {
+            // If the study has a parent than it is a site, in this case we
+            // should get the event definitions of the parent
+            parentStudy = (StudyBean) studyDao.findByPK(study.getParentStudyId());
+        } else {
+        	parentStudy = study;
+        }
+    	
+    	
+        ArrayList answer = new ArrayList();
+
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        // study.study_id=?
+        variables.put(Integer.valueOf(1), Integer.valueOf(parentStudy.getId()));
+        // or study.parent_study_id=?
+        variables.put(Integer.valueOf(2), Integer.valueOf(parentStudy.getId()));
+
+        String sql = digester.getQuery("findAllByStudySpecialist");
+
+        ArrayList alist = this.select(sql, variables);
+        Iterator it = alist.iterator();
+
+        while (it.hasNext()) {
+            StudyEventDefinitionBean seb = (StudyEventDefinitionBean) this.getEntityFromHashMap((HashMap) it.next());
+            answer.add(seb);
+        }
+
+        return answer;
+        
+    } 
+    
     public ArrayList findAllWithStudyEvent(StudyBean currentStudy) {
         ArrayList answer = new ArrayList();
 
@@ -440,6 +483,54 @@ public class StudyEventDefinitionDAO<K extends String,V extends ArrayList> exten
         return al;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Return Study Event Definitions marked with "[Lab]" (case insensitive).
+     * TODO: make label parametric
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param parentStudyId
+     * @return
+     */
+    public ArrayList<StudyEventDefinitionBean> findAllActiveByParentStudyIdSpecialist(int parentStudyId) {
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(parentStudyId));
+        ArrayList alist = this.select(digester.getQuery("findAllActiveByParentStudyIdSpecialist"), variables);
+        ArrayList<StudyEventDefinitionBean> al = new ArrayList<StudyEventDefinitionBean>();
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+            StudyEventDefinitionBean eb = (StudyEventDefinitionBean) this.getEntityFromHashMap((HashMap) it.next());
+            al.add(eb);
+        }
+        return al;
+    }
+    
+
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Return Study Event Definitions marked with "[Lab]" (case insensitive).
+     * TODO: make label parametric
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param study
+     * @return
+     */
+    public ArrayList<StudyEventDefinitionBean> findAllActiveByStudySpecialist(StudyBean study) {
+        ArrayList<StudyEventDefinitionBean> answer = new ArrayList<StudyEventDefinitionBean>();
+        this.setTypesExpected();
+        HashMap variables = new HashMap();
+        variables.put(new Integer(1), new Integer(study.getId()));
+        variables.put(new Integer(2), new Integer(study.getId()));
+        ArrayList alist = this.select(digester.getQuery("findAllActiveByStudySpecialist"), variables);
+        Iterator it = alist.iterator();
+        while (it.hasNext()) {
+        	StudyEventDefinitionBean eb = (StudyEventDefinitionBean) this.getEntityFromHashMap((HashMap) it.next());
+            answer.add(eb);
+        }
+        return answer;
+    }
+    
     /**
      *
      * @param studySubjectId
@@ -462,6 +553,32 @@ public class StudyEventDefinitionDAO<K extends String,V extends ArrayList> exten
         return result;
     }
 
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * Return Study Event Definitions marked with "[Lab]" (case insensitive).
+     * TODO: make label parametric
+     * 
+     * @author DataRiver (EC) 01/07/2019
+     * @param studySubjectId
+     * @return
+     */
+    public Map<Integer, StudyEventDefinitionBean> findByStudySubjectSpecialist(int studySubjectId) {
+        this.setTypesExpected(); // <== Must be called first
+        HashMap<Integer, Object> param = new HashMap<Integer, Object>();
+        param.put(1, studySubjectId);
+
+        List selectResult = select(digester.getQuery("findByStudySubjectSpecialist"), param);
+
+        Map<Integer,StudyEventDefinitionBean> result = new HashMap<Integer, StudyEventDefinitionBean>();
+
+        Iterator it = selectResult.iterator();
+        while (it.hasNext()) {
+            StudyEventDefinitionBean bean = (StudyEventDefinitionBean) this.getEntityFromHashMap((HashMap) it.next());
+            result.put(bean.getId(), bean);
+        }
+        return result;
+    }
+    
     /**
      *
      * @param studySubjectId

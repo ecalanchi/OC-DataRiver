@@ -196,7 +196,11 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
          * adding information about enrollment enabling in sites
          */
         //boolean addSubjectLinkShow = studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR);
-        boolean addSubjectLinkShow = (studyBean.getStatus().isAvailable() && !r.equals(Role.MONITOR))&&studyBean.isEnrollmentEn();
+        //+DR modified by DataRiver (EC) 01/07/2019
+        boolean addSubjectLinkShow = (studyBean.getStatus().isAvailable() 
+        		&& !r.equals(Role.MONITOR)) &&studyBean.isEnrollmentEn() 
+        		&& !(currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]"));
+        //+DR end modified by DataRiver (EC) 01/07/2019
         
         tableFacade.setToolbar(new ListEventsForSubjectTableToolbar(getStudyEventDefinitions(), getStudyGroupClasses(), selectedStudyEventDefinition,
                 addSubjectLinkShow, showMoreLink));
@@ -245,7 +249,18 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
             subjectGroupMapBean = null;
 
             // Get EventCrfs for study Subject
-            List<EventCRFBean> eventCrfs = getEventCRFDAO().findAllByStudySubject(studySubjectBean.getId());
+            //+DR modified by DataRiver (EC) 01/07/2019
+            //List<EventCRFBean> eventCrfs = getEventCRFDAO().findAllByStudySubject(studySubjectBean.getId());
+            List<EventCRFBean> eventCrfs;
+        	if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        		//Specialist
+        		eventCrfs = getEventCRFDAO().findAllByStudySubjectSpecialist(studySubjectBean.getId());
+        	} else {
+        		//Normal User
+        		eventCrfs = getEventCRFDAO().findAllByStudySubject(studySubjectBean.getId());
+        	}
+        	//+DR end modified by DataRiver (EC) 01/07/2019
+        	
             HashMap<String, EventCRFBean> crfAsKeyEventCrfAsValue = new HashMap<String, EventCRFBean>();
             for (EventCRFBean eventCRFBean : eventCrfs) {
                 CRFBean crf = getCrfDAO().findByVersionId(eventCRFBean.getCRFVersionId());
@@ -262,16 +277,47 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
                 d.getProps().put("event", null);
                 d.getProps().put("event.status", SubjectEventStatus.NOT_SCHEDULED);
                 d.getProps().put("studySubject.createdDate", null);
-                for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
-                    CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
-                    d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
-                    d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
-                    d.getProps().put("crf_" + crf.getId() + "_crf", crf);
-                    //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
-                    d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
-                            getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
-                    theItem.put("crf_" + crf.getId(), "");
-                }
+                
+                //+DR modified by DataRiver (EC) 01/07/2019
+                
+                //for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
+                //    CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
+                //    d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                //    d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                //    d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                //    //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                //    d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                //            getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+                //    theItem.put("crf_" + crf.getId(), "");
+                //}
+                
+                if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+            		//Specialist
+                    for (int i = 0; i < getCrfsSpecialist(selectedStudyEventDefinition).size(); i++) {
+                        CRFBean crf = getCrfsSpecialist(selectedStudyEventDefinition).get(i);
+                        d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                        d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                        d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                        //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                        d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                                getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+                        theItem.put("crf_" + crf.getId(), "");
+                    }
+        	    } else {
+            		//Normal User
+                    for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
+                        CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
+                        d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                        d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                        d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                        //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                        d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                                getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+                        theItem.put("crf_" + crf.getId(), "");
+                    }  
+        	    }
+                //+DR end modified by DataRiver (EC) 01/07/2019
+                
                 events.add(d);
             }
             // study event size >0
@@ -280,24 +326,71 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
                 d.getProps().put("event", studyEventBean);
                 d.getProps().put("event.status", studyEventBean.getSubjectEventStatus());
                 d.getProps().put("studySubject.createdDate", studyEventBean.getDateStarted());
-                for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
-                    CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
-                    EventCRFBean eventCRFBean = crfAsKeyEventCrfAsValue.get(crf.getId() + "_" + studyEventBean.getId());
-                    if (eventCRFBean != null) {
-                        d.getProps().put("crf_" + crf.getId(), eventCRFBean.getStage());
-                        d.getProps().put("crf_" + crf.getId() + "_eventCrf", eventCRFBean);
+                
+                //+DR modified by DataRiver (EC) 01/07/2019
+                
+                //for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
+                //    CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
+                //    EventCRFBean eventCRFBean = crfAsKeyEventCrfAsValue.get(crf.getId() + "_" + studyEventBean.getId());
+                //    if (eventCRFBean != null) {
+                //        d.getProps().put("crf_" + crf.getId(), eventCRFBean.getStage());
+                //        d.getProps().put("crf_" + crf.getId() + "_eventCrf", eventCRFBean);
+                //
+                //    } else {
+                //        d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                //        d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                //    }
+                //    d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                //    //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                //    d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                //            getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+                //
+                //    theItem.put("crf_" + crf.getId(), "");
+                //}
+                
+            	if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+            		//Specialist
+                    for (int i = 0; i < getCrfsSpecialist(selectedStudyEventDefinition).size(); i++) {
+                        CRFBean crf = getCrfsSpecialist(selectedStudyEventDefinition).get(i);
+                        EventCRFBean eventCRFBean = crfAsKeyEventCrfAsValue.get(crf.getId() + "_" + studyEventBean.getId());
+                        if (eventCRFBean != null) {
+                            d.getProps().put("crf_" + crf.getId(), eventCRFBean.getStage());
+                            d.getProps().put("crf_" + crf.getId() + "_eventCrf", eventCRFBean);
 
-                    } else {
-                        d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
-                        d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                        } else {
+                            d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                            d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                        }
+                        d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                        //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                        d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                                getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+
+                        theItem.put("crf_" + crf.getId(), "");
                     }
-                    d.getProps().put("crf_" + crf.getId() + "_crf", crf);
-                    //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
-                    d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
-                            getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
+        	    } else {
+            		//Normal User
+                    for (int i = 0; i < getCrfs(selectedStudyEventDefinition).size(); i++) {
+                        CRFBean crf = getCrfs(selectedStudyEventDefinition).get(i);
+                        EventCRFBean eventCRFBean = crfAsKeyEventCrfAsValue.get(crf.getId() + "_" + studyEventBean.getId());
+                        if (eventCRFBean != null) {
+                            d.getProps().put("crf_" + crf.getId(), eventCRFBean.getStage());
+                            d.getProps().put("crf_" + crf.getId() + "_eventCrf", eventCRFBean);
+                        } else {
+                            d.getProps().put("crf_" + crf.getId(), DataEntryStage.UNCOMPLETED);
+                            d.getProps().put("crf_" + crf.getId() + "_eventCrf", null);
+                        }
+                        d.getProps().put("crf_" + crf.getId() + "_crf", crf);
+                        //d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf", eventDefinitionCrfs.get(i));
+                        d.getProps().put("crf_" + crf.getId() + "_eventDefinitionCrf",
+                                getEventDefinitionCRFBean(selectedStudyEventDefinition.getId(), crf, studySubjectBean));
 
-                    theItem.put("crf_" + crf.getId(), "");
-                }
+                        theItem.put("crf_" + crf.getId(), "");
+                    }
+        	    }
+            	
+            	//+DR end modified by DataRiver (EC) 01/07/2019
+            	
                 events.add(d);
             }
             theItem.put("events", events);
@@ -335,10 +428,27 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
         }
         columnNamesList.add("event.status");
         columnNamesList.add("studySubject.createdDate");
+        
+        //+DR modified by DataRiver (EC) 01/07/2019
 
-        for (CRFBean crfBean : getCrfs(selectedStudyEventDefinition)) {
-            columnNamesList.add("crf_" + crfBean.getId());
-        }
+        //for (CRFBean crfBean : getCrfs(selectedStudyEventDefinition)) {
+        //    columnNamesList.add("crf_" + crfBean.getId());
+        //}
+        
+    	if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+    		//Specialist
+	        for (CRFBean crfBean : getCrfsSpecialist(selectedStudyEventDefinition)) {
+	            columnNamesList.add("crf_" + crfBean.getId());
+	        }
+	    } else {
+    		//Normal User
+	        for (CRFBean crfBean : getCrfs(selectedStudyEventDefinition)) {
+	            columnNamesList.add("crf_" + crfBean.getId());
+	        }	    	
+	    }
+        
+        //+DR end modified by DataRiver (EC) 01/07/2019
+    	
         columnNamesList.add("actions");
         columnNames = columnNamesList.toArray(columnNames);
     }
@@ -382,12 +492,34 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
     @SuppressWarnings("unchecked")
     private ArrayList<StudyEventDefinitionBean> getStudyEventDefinitions() {
         if (this.studyEventDefinitions == null) {
-            if (studyBean.getParentStudyId() > 0) {
-                StudyBean parentStudy = (StudyBean) getStudyDAO().findByPK(studyBean.getParentStudyId());
-                studyEventDefinitions = getStudyEventDefinitionDao().findAllByStudy(parentStudy);
-            } else {
-                studyEventDefinitions = getStudyEventDefinitionDao().findAllByStudy(studyBean);
-            }
+        	
+        	//+DR modified by DataRiver (EC) 01/07/2019
+        	
+            //if (studyBean.getParentStudyId() > 0) {
+            //    StudyBean parentStudy = (StudyBean) getStudyDAO().findByPK(studyBean.getParentStudyId());
+            //    studyEventDefinitions = getStudyEventDefinitionDao().findAllByStudy(parentStudy);
+            //} else {
+            //    studyEventDefinitions = getStudyEventDefinitionDao().findAllByStudy(studyBean);
+            //}
+        	
+        	if (currentUser.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        		//Specialist
+                if (studyBean.getParentStudyId() > 0) {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyIdSpecialist(studyBean.getParentStudyId());
+                } else {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyIdSpecialist(studyBean.getId());
+                }                
+        	} else {
+        		//Normal user
+                if (studyBean.getParentStudyId() > 0) {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getParentStudyId());
+                } else {
+                    studyEventDefinitions = getStudyEventDefinitionDao().findAllActiveByParentStudyId(studyBean.getId());
+                }    
+        	}
+        	
+        	//+DR end modified by DataRiver (EC) 01/07/2019
+        	
         }
         return this.studyEventDefinitions;
     }
@@ -398,6 +530,34 @@ public class ListEventsForSubjectTableFactory extends AbstractTableFactory {
             crfBeans = new ArrayList<CRFBean>();
             eventDefinitionCrfs = new ArrayList<EventDefinitionCRFBean>();
             for (EventDefinitionCRFBean eventDefinitionCrf : (List<EventDefinitionCRFBean>) getEventDefintionCRFDAO().findAllActiveByEventDefinitionId(
+                    eventDefinition.getId())) {
+                CRFBean crfBean = (CRFBean) getCrfDAO().findByPK(eventDefinitionCrf.getCrfId());
+                ArrayList<CRFVersionBean> crfVersions = (ArrayList<CRFVersionBean>)getCrfVersionDAO().findAllByCRFId(eventDefinitionCrf.getCrfId());
+                crfBean.setVersions(crfVersions);
+                if (eventDefinitionCrf.getParentId() == 0) {
+                    crfBeans.add(crfBean);
+                    eventDefinitionCrfs.add(eventDefinitionCrf);
+                }
+
+            }
+            return crfBeans;
+        }
+        return crfBeans;
+    }
+    
+    
+    //+DR added by DataRiver (EC) 01/07/2019
+    /**
+     * @author DataRiver (EC) 01/07/2019
+     * @param eventDefinition
+     * @return
+     */
+    @SuppressWarnings("unchecked")    
+    private ArrayList<CRFBean> getCrfsSpecialist(StudyEventDefinitionBean eventDefinition) {
+        if (this.crfBeans == null) {
+            crfBeans = new ArrayList<CRFBean>();
+            eventDefinitionCrfs = new ArrayList<EventDefinitionCRFBean>();
+            for (EventDefinitionCRFBean eventDefinitionCrf : (List<EventDefinitionCRFBean>) getEventDefintionCRFDAO().findAllActiveByEventDefinitionIdSpecialist(
                     eventDefinition.getId())) {
                 CRFBean crfBean = (CRFBean) getCrfDAO().findByPK(eventDefinitionCrf.getCrfId());
                 ArrayList<CRFVersionBean> crfVersions = (ArrayList<CRFVersionBean>)getCrfVersionDAO().findAllByCRFId(eventDefinitionCrf.getCrfId());

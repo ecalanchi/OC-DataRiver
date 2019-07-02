@@ -953,6 +953,13 @@ public class AddNewSubjectServlet extends SecureController {
 
         String exceptionName = resexception.getString("no_permission_to_add_new_subject");
         String noAccessMessage = respage.getString("may_not_add_new_subject") + " " + respage.getString("change_study_contact_sysadmin");
+        
+        //+DR added by DataRiver (EC) 01/07/2019     
+        if (ub.getInstitutionalAffiliation().toLowerCase().contains("[lab]")){
+        	addPageMessage(noAccessMessage);
+            throw new InsufficientPermissionException(Page.MENU_SERVLET, exceptionName, "1");
+        }
+        //+DR end added by DataRiver (EC) 01/07/2019
 
         if (SubmitDataServlet.maySubmitData(ub, currentRole)) {
             return;
