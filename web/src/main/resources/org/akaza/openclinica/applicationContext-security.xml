@@ -58,8 +58,10 @@
   </security:http>  
  
 
+<!--     <bean id="authenticationProcessingFilterEntryPoint" -->
+<!--           class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint"> -->
     <bean id="authenticationProcessingFilterEntryPoint"
-          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+          class="org.akaza.openclinica.web.filter.OpenClinicaLoginUrlAuthenticationEntryPoint">
         <property name="loginFormUrl" value="/pages/login/login"/>
         <property name="forceHttps" value="false"/>
     </bean>
