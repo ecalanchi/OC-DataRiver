@@ -54,7 +54,7 @@ public class OpenClinicaLoginUrlAuthenticationEntryPoint extends
 				urlHost=request.getServerName();
 				LOGGER.warn("SysURL empty in datainfo.properties");
 			}
-			System.out.println("##### "+urlHost);
+//			System.out.println("##### "+urlHost);
 	        
 	        urlBuilder.setScheme(scheme);
 //	        urlBuilder.setServerName(request.getServerName());
@@ -75,7 +75,7 @@ public class OpenClinicaLoginUrlAuthenticationEntryPoint extends
 	            }
 	        }
 
-	        System.out.println("##### "+urlBuilder.getUrl());
+//	        System.out.println("##### "+urlBuilder.getUrl());
 	        return urlBuilder.getUrl();
 	    }
 	

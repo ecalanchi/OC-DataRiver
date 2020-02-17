@@ -26,6 +26,14 @@
 <%-- <script type="text/JavaScript" language="JavaScript" src="includes/global_functions_javascript2.js"></script> --%>
 <script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/global_functions_javascript.js'/>"></script>
 <script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/ua-parser.min.js'/>"></script>
+<style>html{display:none;}</style>
+<script>
+   if (self == top) {
+       document.documentElement.style.display = 'block'; 
+   } else {
+       top.location = self.location; 
+   }
+</script>
 </head>
 
 <fmt:setBundle basename="org.akaza.openclinica.i18n.notes" var="restext"/>
