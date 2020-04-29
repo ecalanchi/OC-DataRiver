@@ -110,6 +110,9 @@ public class ChangeStudyServlet extends SecureController {
             if (study != null && study.getStatus().equals(Status.PENDING)) {
                 sr.setStatus(study.getStatus());
             }
+            if (study != null && study.getStatus().equals(Status.DELETED)) {
+                sr.setStatus(study.getStatus());
+            }
             validStudies.add(sr);
         }
 
@@ -121,6 +124,11 @@ public class ChangeStudyServlet extends SecureController {
         } else {
             if ("confirm".equalsIgnoreCase(action)) {
                 logger.info("confirm");
+                
+                // pull out/update the roles and privs here               
+                ArrayList userRoleBeans = (ArrayList) udao.findAllRolesByUserName(ub.getName());
+                ub.setRoles(userRoleBeans);
+               
                 confirmChangeStudy(studies);
 
             } else if ("submit".equalsIgnoreCase(action)) {

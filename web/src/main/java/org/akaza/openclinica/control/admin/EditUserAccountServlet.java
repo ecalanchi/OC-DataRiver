@@ -99,9 +99,12 @@ public class EditUserAccountServlet extends SecureController {
         request.setAttribute("studies", studies);
 
         int userId = fp.getInt(ARG_USERID);
+        
+        
         UserAccountDAO udao = new UserAccountDAO(sm.getDataSource());
         UserAccountBean user = (UserAccountBean) udao.findByPK(userId);
 
+        techAdminProtect(user);
         int stepNum = fp.getInt(ARG_STEPNUM);
 
         if (!fp.isSubmitted()) {
@@ -221,6 +224,8 @@ public class EditUserAccountServlet extends SecureController {
             throw new InconsistentStateException(Page.ADMIN_SYSTEM, resexception.getString("an_invalid_step_was_specified"));
         }
     }
+
+	
 
     // public void processRequest(HttpServletRequest request,
     // HttpServletResponse

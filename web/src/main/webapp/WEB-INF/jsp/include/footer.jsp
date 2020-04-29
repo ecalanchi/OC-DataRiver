@@ -18,7 +18,9 @@
                 <a href="http://www.openclinica.com" target="new"><fmt:message key="openclinica_portal" bundle="${resword}"/></a>
                 |
                 <a href="javascript:openDocWindow('https://docs.openclinica.com')"><fmt:message key="help" bundle="${resword}"/></a>
-<!-- Removed by DataRiver (EC) according to EU GDPR requirements 2020-02-11 -->                 
+                |
+                <a href="javascript:openDocWindow('https://openclinica.com/openclinica-privacy-policy/may-2018/')"><fmt:message key="privacy" bundle="${resword}"/></a>
+                <!-- Removed by DataRiver (EC) according to EU GDPR requirements 2020-02-11 -->                 
 <!--                 | -->
 <%--              <a href="${pageContext.request.contextPath}Contact"><fmt:message key="contact" bundle="${resword}"/></a> --%>
 <%--              <a href="${pageContext.request.contextPath}/Contact"><fmt:message key="contact" bundle="${resword}"/></a> --%>
