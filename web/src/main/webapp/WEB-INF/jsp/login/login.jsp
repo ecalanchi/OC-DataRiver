@@ -1,8 +1,10 @@
 <%@page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ include file="/WEB-INF/jsp/taglibs.jsp" %>
+<%String action = request.getParameter("action");%>
+<c:set var="action" value="<%=action%>" scope="request"></c:set>
 <!-- For Mantis Issue 6099 -->
 <jsp:useBean scope='session' id='userBean' class='org.akaza.openclinica.bean.login.UserAccountBean'/>
-    <c:if test="${userBean.name!=''}">
+    <c:if test="${userBean.name!='' && empty action}">	
     <c:redirect url="/MainMenu"/>
     </c:if>
 <!-- End of 6099-->
@@ -15,13 +17,13 @@
 <title>OpenClinica</title>
 
 <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
- <meta http-equiv="X-UA-Compatible" content="IE=8" />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
 <link rel="stylesheet" href="<c:url value='/includes/styles.css'/>" type="text/css"/>
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
 <link rel="stylesheet" href="<c:url value='/includes/NewLoginStyles.css'/>" type="text/css"/>
 <script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/jmesa/jquery.min.js'/>"></script>
-<script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/jmesa/jquery-migrate-1.1.1.js'/>"></script>
+<script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/jmesa/jquery-migrate-3.3.1.js'/>"></script>
 <script type="text/javascript" language="JavaScript" src="<c:url value='/includes/jmesa/jquery.blockUI.js'/>"></script>
 <%-- <script type="text/JavaScript" language="JavaScript" src="includes/global_functions_javascript2.js"></script> --%>
 <script type="text/JavaScript" language="JavaScript" src="<c:url value='/includes/global_functions_javascript.js'/>"></script>

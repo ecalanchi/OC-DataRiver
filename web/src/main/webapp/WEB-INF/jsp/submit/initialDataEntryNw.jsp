@@ -13,6 +13,7 @@
 <jsp:useBean scope='session' id='userRole' class='org.akaza.openclinica.bean.login.StudyUserRoleBean' />
 <jsp:useBean scope='request' id='isAdminServlet' class='java.lang.String' />
 <jsp:useBean scope='request' id='exitTo' class='java.lang.String' />
+<jsp:useBean scope='request' id='sid' class='java.lang.String' />
 <jsp:useBean scope="request" id="section" class=
   "org.akaza.openclinica.bean.submit.DisplaySectionBean" />
 <jsp:useBean scope="request" id="annotations" class="java.lang.String" />
@@ -26,7 +27,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>OpenClinica <fmt:message key="initial_data_entry" bundle="${resword}"/></title>
-    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <link rel="stylesheet" href="includes/styles.css" type="text/css" media="screen">
 <%-- <link rel="stylesheet" href="includes/styles2.css" type="text/css">--%>
@@ -123,6 +124,7 @@
 <%-- We have to feed this value to the method giveFirstElementFocus()--%>
 <input id="formFirstField" type="hidden" name="formFirstField" value="${requestScope['formFirstField']}" />
 <input type="hidden" name="exitTo" value="${fn:escapeXml(exitTo)}" />
+<input type="hidden" name="sid" value="${section.eventDefinitionCRF.studyId}" />
 <input type="hidden" name="sectionId" value="<c:out value="${section.section.id}"/>" />
 <input type="hidden" name="isFirstTimeOnSection" value="<c:out value="${section.section.id}"/>" />
 
@@ -330,8 +332,8 @@ function gotoLink() {
     }
 }
 
-function pageWidth() {return window.innerWidth != null? window.innerWidth: document.documentElement && document.documentElement.clientWidth ? document.documentElement.clientWidth:document.body != null? document.body.clientWidth:null;}
-function pageHeight() {return window.innerHeight != null? window.innerHeight: document.documentElement && document.documentElement.clientHeight ? document.documentElement.clientHeight:document.body != null? document.body.clientHeight:null;}
+function pageWidth() {return window.innerWidth != 'undefined'? window.innerWidth: document.documentElement && document.documentElement.clientWidth ? document.documentElement.clientWidth:document.body != null? document.body.clientWidth:null;}
+function pageHeight() {return window.innerHeight != 'undefined'? window.innerHeight: document.documentElement && document.documentElement.clientHeight ? document.documentElement.clientHeight:document.body != null? document.body.clientHeight:null;}
 function posLeft() {return typeof window.pageXOffset != 'undefined' ? window.pageXOffset:document.documentElement && document.documentElement.scrollLeft? document.documentElement.scrollLeft:document.body.scrollLeft? document.body.scrollLeft:0;}
 function posTop() {return typeof window.pageYOffset != 'undefined' ? window.pageYOffset:document.documentElement && document.documentElement.scrollTop? document.documentElement.scrollTop: document.body.scrollTop?document.body.scrollTop:0;}
 function $(x){return document.getElementById(x);}
@@ -386,6 +388,8 @@ function initmb(){
 }
 
 window.onload = initmb;
+                <c:if test='${popUpURL != ""}'>
+                openDNoteWindow('${popUpURL}');</c:if>
 
 //-->
 </script>
