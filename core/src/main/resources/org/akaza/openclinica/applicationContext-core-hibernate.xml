@@ -259,7 +259,12 @@
 	<bean id="randomizationCustomDao" class="org.akaza.openclinica.dao.hibernate.datariver.RandomizationCustomDao" autowire="byName" >
 		<property name="sessionFactory" ref="sessionFactoryRandomization"></property>
 	</bean>
-    <!-- //+DR added by DataRiver (EC) 28/11/2017 -->
+    <!-- //+DR end added by DataRiver (EC) 28/11/2017 -->
+    <!-- //+DR added by DataRiver (EC) 21/12/2020 -->
+    <bean id="lotteryCustomDao" class="org.akaza.openclinica.dao.hibernate.datariver.LotteryCustomDao" autowire="byName" >
+		<property name="sessionFactory" ref="sessionFactoryRandomization"></property>
+	</bean>
+	<!-- //+DR end added by DataRiver (EC) 21/12/2020 -->
     
   <bean id="usageStatsServiceDAO" class="org.akaza.openclinica.dao.hibernate.UsageStatsServiceDAO" parent="abstractDomainDao" autowire="byName" />
   <bean id="openClinicaVersionDAO" class="org.akaza.openclinica.dao.hibernate.OpenClinicaVersionDAO" parent="abstractDomainDao" autowire="byName" />

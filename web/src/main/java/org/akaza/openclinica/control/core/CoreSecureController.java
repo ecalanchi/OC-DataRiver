@@ -1361,6 +1361,7 @@ public abstract class CoreSecureController extends HttpServlet {
     	textToBeReplaced = textToBeReplaced.replaceAll("\\{date\\}", eventCRFBean.getDateCompleted().toLocaleString());
     	textToBeReplaced = textToBeReplaced.replaceAll("\\{site\\}", studyBean.getAbbreviatedName());
     	textToBeReplaced = textToBeReplaced.replaceAll("\\{user\\}", userAccountBean.getName());
+    	textToBeReplaced = textToBeReplaced.replaceAll("\\{email\\}", userAccountBean.getEmail());
     	textToBeReplaced = textToBeReplaced.replaceAll("\\{randomization_arm\\}", randomizationArm);
     	textToBeReplaced = textToBeReplaced.replaceAll("\\{sysUrl\\}", SQLInitServlet.getField("sysURL"));
     	

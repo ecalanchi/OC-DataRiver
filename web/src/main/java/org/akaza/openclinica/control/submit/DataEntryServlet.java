@@ -88,6 +88,7 @@ import org.akaza.openclinica.core.form.StringUtil;
 import org.akaza.openclinica.dao.admin.AuditDAO;
 import org.akaza.openclinica.dao.admin.CRFDAO;
 import org.akaza.openclinica.dao.hibernate.DynamicsItemFormMetadataDao;
+import org.akaza.openclinica.dao.hibernate.datariver.LotteryCustomDao;
 import org.akaza.openclinica.dao.hibernate.datariver.RandomizationArmsDao;
 import org.akaza.openclinica.dao.hibernate.datariver.RandomizationCustomDao;
 import org.akaza.openclinica.dao.hibernate.datariver.RandomizationSubjectsDao;
@@ -110,6 +111,7 @@ import org.akaza.openclinica.dao.submit.SectionDAO;
 import org.akaza.openclinica.dao.submit.SubjectDAO;
 import org.akaza.openclinica.domain.crfdata.DynamicsItemFormMetadataBean;
 import org.akaza.openclinica.domain.datariver.DatariverEmailBean;
+import org.akaza.openclinica.domain.datariver.LotteryCustomBean;
 import org.akaza.openclinica.domain.rule.RuleSetBean;
 import org.akaza.openclinica.domain.rule.action.RuleActionRunBean.Phase;
 import org.akaza.openclinica.exception.OpenClinicaException;
@@ -258,7 +260,11 @@ public abstract class DataEntryServlet extends CoreSecureController {
     private RandomizationArmsDao randomizationArmsDao;
     private RandomizationSubjectsDao randomizationSubjectsDao;
     private RandomizationCustomDao randomizationCustomDao;
-
+    //+DR added by DataRiver (EC) 21/12/2020 
+    private LotteryCustomDao lotteryCustomDao ;
+    private final Object simpleLockObj = new Object();
+    
+	//+DR added by DataRiver (EC) 28/11/2017 
     public RandomizationVarDao getRandomizationVarDao() {
     	randomizationVarDao = this.randomizationVarDao != null ? randomizationVarDao : (RandomizationVarDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("randomizationVarDao");
         return randomizationVarDao;
@@ -279,7 +285,14 @@ public abstract class DataEntryServlet extends CoreSecureController {
 		return randomizationCustomDao;
 	}
 	//+DR end added by DataRiver (EC) 28/11/2017 
-    
+	
+	//+DR added by DataRiver (EC) 21/12/2020
+	public LotteryCustomDao getLotteryCustomDao() {
+		lotteryCustomDao = this.lotteryCustomDao != null ? lotteryCustomDao : (LotteryCustomDao) SpringServletAccess.getApplicationContext(this.getServletContext()).getBean("lotteryCustomDao");
+		return lotteryCustomDao;
+	}
+	//+DR end added by DataRiver (EC) 21/12/2020
+	
 //    //+DR added by DataRiver (EC) 02/05/2018
 //	//hashset doesn't add duplicates
 //	Set<String> listAdminEditItems = new HashSet<String>();
@@ -1990,7 +2003,9 @@ public abstract class DataEntryServlet extends CoreSecureController {
                             	//System.out.println("##### allocation key: " + allocationKey);
                             	AssignRandomization assignRandomization = new AssignRandomization(sm, ecb,getRandomizationVarDao(),getRandomizationArmsDao(),getRandomizationSubjectsDao(), getRandomizationCustomDao());
                                 Boolean randomized = false;
-                                randomized = assignRandomization.randomizeSubject();
+                                synchronized (simpleLockObj) {
+                                	randomized = assignRandomization.randomizeSubject();
+                                }
                                 if (randomized){
                                     ArrayList al = assignRandomization.getRandomizationArmsName();
                                     ArrayList alids = assignRandomization.getSubjectRandomizationArmsValue(); 
@@ -2020,14 +2035,133 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                 	if (allocationKey.equals("randomized") && getRandomizationVarDao().toBeRandomized(studyEventDefinition.getId(), crfBean.getId())) {
                                 		addPageMessage(MessageFormat.format(respage.getString("subject_not_randomized"),""), request);
                                 	}
-//                                    request.setAttribute(BEAN_DISPLAY, section);
-//                                    request.setAttribute(BEAN_ANNOTATIONS, fp.getString(INPUT_ANNOTATIONS));
-//                                    setUpPanel(section);
-//                                    forwardPage(getJSPPage());
-//                                    return;
+//	                                    request.setAttribute(BEAN_DISPLAY, section);
+//	                                    request.setAttribute(BEAN_ANNOTATIONS, fp.getString(INPUT_ANNOTATIONS));
+//	                                    setUpPanel(section);
+//	                                    forwardPage(getJSPPage());
+//	                                    return;
                                     
                                 }
                             }
+                            
+                            //+DR added by DataRiver (EC) 21/12/2020
+                            // LUPIAE Lottery
+                            String currentStudyName = "";
+                            if (study.getParentStudyId() > 0) {
+                                // this is a site, find parent
+                                StudyBean parentStudy = (StudyBean) studydao.findByPK(study.getParentStudyId());
+                                currentStudyName = parentStudy.getAbbreviatedName();
+                            } else {
+                            	currentStudyName = study.getAbbreviatedName();
+                            }
+
+                        	if (currentStudyName.equals("LUPIAE") && crfBean.getName().equals("REGISTRATION [LUPIAE]")){  
+                        		Boolean isWinner = false;
+                        	
+                        	//COUNT 'W' and 'L' for current site
+                        	HashMap<String,Integer> siteScore = getLotteryCustomDao().getOutcomeListBySite(ssb.getStudyId());
+                        	
+//                            Iterator it = siteScore.entrySet().iterator();
+//                            while (it.hasNext()) {
+//                                Map.Entry pair = (Map.Entry)it.next();
+//                                System.out.println(pair.getKey() + " = " + pair.getValue());
+//                                System.out.println(Integer.valueOf(pair.getValue().toString())==3);
+//                            }
+                        	
+                        	// if LOSE=2 and WIN=0 then is WINNER
+                        	if (siteScore != null){
+                            	if (siteScore.size()>0){
+                            		System.out.println("Site "+ssb.getStudyId()+": L="+siteScore.get("L")+"; W="+siteScore.get("W"));
+                            		if (siteScore.get("L") == 2 && siteScore.get("W") == 0){
+                            			isWinner = true;
+                            			System.out.println(" *** Third registration WINNER ***");
+                            		}
+                            	}
+                        	}
+
+                        	// else get first available row from lottery table
+                        	if (!isWinner){
+                        		LotteryCustomBean lcb = new LotteryCustomBean();
+                        		synchronized (simpleLockObj) {
+                        			lcb = getLotteryCustomDao().getNextListSlot();
+                        			if (lcb != null){
+                        				System.out.println("Returned Lottery ID:"+lcb.getLotteryId());
+                            			System.out.println("Returned Outcome:"+lcb.getOutcome());
+                            			if (lcb.getOutcome().trim().equals("W")){
+                            				isWinner = true;
+                            			}
+                            			
+                            			// update lottery table
+                            			lcb.setStudySubjectId(ssb.getId());
+                            			lcb.setStudySubjectLabel(ssb.getLabel());
+                            			lcb.setSiteId(ssb.getStudyId());
+                            			lcb.setSiteName(((StudyBean) studydao.findByPK(ssb.getStudyId())).getName());
+                            			lcb.setUserId(sm.getUserBean().getId());
+                            			lcb.setUserName(sm.getUserBean().getName());
+                            			lcb.setUserEmail(sm.getUserBean().getEmail());
+                            			lcb.setDateRegistered(new Date());
+                            			
+                            			Boolean isSaved = getLotteryCustomDao().saveLotteryCustomBean(lcb);
+//                                			System.out.println("is Saved="+isSaved);
+                        			}                            			
+                        		}
+                        		
+                        	}
+                        	                    	
+                        	//   if WIN send emails
+                        	if (isWinner){
+                        		System.out.println(" ************ WINNER ************ ");
+                                String body = "";
+                                String emailSubject = "";
+                                
+                                ArrayList<DatariverEmailBean> emailArray = getDatariverEmailDao().getDatariverEmailByEmailTypeId(7);
+                                
+//                                System.out.println("emailArray size: "+emailArray.size());
+                                if (!emailArray.isEmpty()){
+    	                            Iterator i = emailArray.iterator();
+    	
+    	                            while(i.hasNext()){
+    	                            	DatariverEmailBean deb = (DatariverEmailBean) i.next();
+    	                            	
+	                            		Boolean messageSent = false;
+
+	                            		body = deb.getHtmlBody();
+		                                body = setEmailParameters(body, ecb, crfVersionBean, crfBean, studyEventDefinition, studyEventBean, currentStudy, ssb, ub, subjectRandomizedArms);
+//		                                System.out.println("BODY: "+body);
+		                                
+	                            		emailSubject = deb.getSubject();
+	                            		emailSubject = setEmailParameters(emailSubject, ecb, crfVersionBean, crfBean, studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+//	                            		System.out.println("EMAILSUBJECT: "+emailSubject);
+	                            		
+		                                String recipients = deb.getRecipients().trim();
+		                                recipients = setEmailParameters(recipients, ecb, crfVersionBean, crfBean, studyEventDefinition, studyEventBean, currentStudy, ssb, ub, "");
+//		                                System.out.println("RECIPIENTS: "+recipients);
+
+//	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath());                              
+//		                    			System.out.println("MESSAGESENT: "+messageSent);
+	                    				messageSent = sendEmailWithReplyTo(recipients, deb.getReplyTo(), deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath(), request);
+
+	                    				
+	                    				//log email with filename [STUDYNAME]_[CRFNAME]_[EMAILTYPE]_yyyy-MM-dd_HHmmssS.html
+		                    	    	logDatariverEmail(
+		                    		    		messageSent ? "sent" : "failed", 
+		                    		    		body, 
+		                    		    		deb.getEmailId(), 
+		                    		    		deb.getEmailTypeId(), 
+		                    		    		emailSubject, 
+		                    		    		recipients, 
+		                    		    		deb.getSender(), 
+		                    		    		deb.getBcc(), 
+		                    		    		ub, 
+		                    		    		((StudyBean) studydao.findByPK(ssb.getStudyId())).getName());	
+		                    	    	
+    	                            } //end while                           
+                                } //end if email array                            		
+                        	} //end if winner
+                        	
+                        }
+                        //+DR end added by DataRiver (EC) 21/12/2020
+                            	
                             
                             //+DR added by DataRiver (EC) 28/11/2017
                             //send email if crf_id is in table datariver_email_crf
@@ -2066,9 +2200,9 @@ public abstract class DataEntryServlet extends CoreSecureController {
 		                                	                            	                                		                                	                                
 		                                String recipients = ub.getEmail() == "" ? deb.getRecipients().trim() : ub.getEmail().trim() + ", " + deb.getRecipients().trim();
 
-	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath());                              
+	                    				messageSent = sendBackgroundEmail(recipients, deb.getBcc(), deb.getSender(), emailSubject, body, true, deb.getAttachmentPath());
 		                    			
-		                    			//log email with filename [STUDYNAME]_[CRFNAME]_crf_marked_complete_yyyy-MM-dd_HHmmssS.html
+		                    			//log email with filename [STUDYNAME]_[CRFNAME]_[EMAILTYPE]_yyyy-MM-dd_HHmmssS.html
 		                    	    	logDatariverEmail(
 		                    		    		messageSent ? "sent" : "failed", 
 		                    		    		body, 

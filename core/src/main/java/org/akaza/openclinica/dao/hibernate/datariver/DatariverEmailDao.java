@@ -169,6 +169,15 @@
        	String hql = "FROM DatariverEmailBean where emailTypeId=5 and enabled=true" ;
        	org.hibernate.Query query = getCurrentSession().createQuery(hql);
        	return (DatariverEmailBean) query.uniqueResult();
-   	} 	
+   	}
+    
+    @SuppressWarnings("unchecked")
+	@Transactional
+	public ArrayList<DatariverEmailBean> getDatariverEmailByEmailTypeId(int emailTypeId) {
+    	String hql = "FROM DatariverEmailBean WHERE emailTypeId=:emailTypeId AND enabled=true" ;
+    	org.hibernate.Query query = getCurrentSession().createQuery(hql);
+    	query.setParameter("emailTypeId", emailTypeId);
+    	return (ArrayList<DatariverEmailBean>) query.list();
+	}
  
  }

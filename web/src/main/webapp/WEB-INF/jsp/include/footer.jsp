@@ -13,6 +13,13 @@
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/includes/wz_tooltip/wz_tooltip.js"></script>
 <table border="0" cellpadding="0" width="100%"  >
+            <!-- Added by DataRiver (EC) 2020-12-21 --> 
+			<c:if test="${study.name=='LUPIAE' || study.parentStudyId == 3}"> 
+			<tr>
+            	<td colspan="3"><img style="padding: 0px 0px 0px 20px; display: inline-block; vertical-align: middle; float: center;" src="images/balsamic-vinegar-web.gif" width="1020" height="255"></td></tr>
+            <tr>
+            </c:if>
+            <!-- End Added by DataRiver (EC) 2020-12-21 --> 
             <tr>
                 <td class="footer_bottom" style="width:240px">
                 <a href="http://www.openclinica.com" target="new"><fmt:message key="openclinica_portal" bundle="${resword}"/></a>
