@@ -106,6 +106,7 @@ import org.springframework.transaction.annotation.Transactional;
 		 if (lcb.getStudySubjectLabel() != "") {query.append(", study_subject_label=:studySubjectLabel ");}
 		 if (lcb.getSiteName() != "") {query.append(", site_name=:siteName ");}
 		 if (lcb.getUserName() != "") {query.append(", user_name=:userName ");}
+		 if (lcb.getOutcome() != "") {query.append(", outcome=:outcome ");}
 		 query.append("WHERE lottery_id=:lotteryId ");
 		 
 		org.hibernate.Query q;
@@ -118,6 +119,7 @@ import org.springframework.transaction.annotation.Transactional;
 			 if (lcb.getStudySubjectLabel() != "") {q.setString("studySubjectLabel", lcb.getStudySubjectLabel());}
 			 if (lcb.getSiteName() != "") {q.setString("siteName", lcb.getSiteName());}
 			 if (lcb.getUserName() != "") {q.setString("userName", lcb.getUserName());}
+			 if (lcb.getOutcome() != "") {q.setString("outcome", lcb.getOutcome());}
 			 q.setInteger("lotteryId", lcb.getLotteryId());
 			 
 			 q.executeUpdate();

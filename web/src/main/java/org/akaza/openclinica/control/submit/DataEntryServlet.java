@@ -2057,30 +2057,8 @@ public abstract class DataEntryServlet extends CoreSecureController {
 
                         	if (currentStudyName.equals("LUPIAE") && crfBean.getName().equals("REGISTRATION [LUPIAE]")){  
                         		Boolean isWinner = false;
-                        	
-                        	//COUNT 'W' and 'L' for current site
-                        	HashMap<String,Integer> siteScore = getLotteryCustomDao().getOutcomeListBySite(ssb.getStudyId());
-                        	
-//                            Iterator it = siteScore.entrySet().iterator();
-//                            while (it.hasNext()) {
-//                                Map.Entry pair = (Map.Entry)it.next();
-//                                System.out.println(pair.getKey() + " = " + pair.getValue());
-//                                System.out.println(Integer.valueOf(pair.getValue().toString())==3);
-//                            }
-                        	
-                        	// if LOSE=2 and WIN=0 then is WINNER
-                        	if (siteScore != null){
-                            	if (siteScore.size()>0){
-                            		System.out.println("Site "+ssb.getStudyId()+": L="+siteScore.get("L")+"; W="+siteScore.get("W"));
-                            		if (siteScore.get("L") == 2 && siteScore.get("W") == 0){
-                            			isWinner = true;
-                            			System.out.println(" *** Third registration WINNER ***");
-                            		}
-                            	}
-                        	}
-
-                        	// else get first available row from lottery table
-                        	if (!isWinner){
+                        		
+                            	// Get first available row from lottery table
                         		LotteryCustomBean lcb = new LotteryCustomBean();
                         		synchronized (simpleLockObj) {
                         			lcb = getLotteryCustomDao().getNextListSlot();
@@ -2090,25 +2068,62 @@ public abstract class DataEntryServlet extends CoreSecureController {
                             			if (lcb.getOutcome().trim().equals("W")){
                             				isWinner = true;
                             			}
-                            			
-                            			// update lottery table
-                            			lcb.setStudySubjectId(ssb.getId());
-                            			lcb.setStudySubjectLabel(ssb.getLabel());
-                            			lcb.setSiteId(ssb.getStudyId());
-                            			lcb.setSiteName(((StudyBean) studydao.findByPK(ssb.getStudyId())).getName());
-                            			lcb.setUserId(sm.getUserBean().getId());
-                            			lcb.setUserName(sm.getUserBean().getName());
-                            			lcb.setUserEmail(sm.getUserBean().getEmail());
-                            			lcb.setDateRegistered(new Date());
-                            			
-                            			Boolean isSaved = getLotteryCustomDao().saveLotteryCustomBean(lcb);
-//                                			System.out.println("is Saved="+isSaved);
                         			}                            			
                         		}
                         		
-                        	}
+                        		// update lottery table
+                    			lcb.setStudySubjectId(ssb.getId());
+                    			lcb.setStudySubjectLabel(ssb.getLabel());
+                    			lcb.setSiteId(ssb.getStudyId());
+                    			lcb.setSiteName(((StudyBean) studydao.findByPK(ssb.getStudyId())).getName());
+                    			lcb.setUserId(sm.getUserBean().getId());
+                    			lcb.setUserName(sm.getUserBean().getName());
+                    			lcb.setUserEmail(sm.getUserBean().getEmail());
+                    			lcb.setDateRegistered(new Date());
+//                        		System.out.println("-------- Updating LotteryCustomBean --------"+
+//                   				 "\nUPDATING lottery_id="+lcb.getLotteryId()+
+//                   				 "\nstudy_subject_id="+ssb.getId()+
+//                   				 "\nstudy_subject_label="+ssb.getLabel()+
+//                   				 "\nsite_id="+ssb.getStudyId()+
+//                   				 "\nsite_name="+((StudyBean) studydao.findByPK(ssb.getStudyId())).getName()+
+//                   				 "\nuser_id="+sm.getUserBean().getId()+
+//                   				 "\nuser_name="+sm.getUserBean().getName()+
+//                   				 "\nuser_email="+sm.getUserBean().getEmail()+
+//                   				 "\noutcome="+lcb.getOutcome());
+                        		
+                    			
+                        		if(!isWinner){
+                        			
+                                	//COUNT 'W' and 'L' for current site
+                                	HashMap<String,Integer> siteScore = getLotteryCustomDao().getOutcomeListBySite(ssb.getStudyId());                               	
+//                                    Iterator it = siteScore.entrySet().iterator();
+//                                    while (it.hasNext()) {
+//                                        Map.Entry pair = (Map.Entry)it.next();
+//                                        System.out.println(pair.getKey() + " = " + pair.getValue());
+//                                        System.out.println(Integer.valueOf(pair.getValue().toString())==3);
+//                                    }
+                                	
+                                	if (siteScore != null){
+                                    	if (siteScore.size()>0){
+                                    		System.out.println("Site "+ssb.getStudyId()+": L="+siteScore.get("L")+"; W="+siteScore.get("W"));
+                                    		
+                                        	// if LOSE=2 and WIN=0 then is WINNER
+                                    		if (siteScore.get("L") == 2 && siteScore.get("W") == 0){
+                                    			System.out.println(" *** Third registration WINNER ***");
+                                    			System.out.println("Updatng OUTCOME from '"+lcb.getOutcome()+"' to 'W' for lottery_id="+lcb.getLotteryId());
+                                    			isWinner = true;
+                                    			lcb.setOutcome("W");
+                                    		}
+                                    	}
+                                	}
+                        			
+                        		}                      		
+                			
+                			// SAVING to LOTTERY table
+                        	Boolean isSaved = getLotteryCustomDao().saveLotteryCustomBean(lcb);
+//                    			System.out.println("is Saved="+isSaved);
                         	                    	
-                        	//   if WIN send emails
+                        	// if WIN send emails
                         	if (isWinner){
                         		System.out.println(" ************ WINNER ************ ");
                                 String body = "";
