@@ -2055,7 +2055,11 @@ public abstract class DataEntryServlet extends CoreSecureController {
                             	currentStudyName = study.getAbbreviatedName();
                             }
 
-                        	if (currentStudyName.equals("LUPIAE") && crfBean.getName().equals("REGISTRATION [LUPIAE]")){  
+                        	if (
+                        			(currentStudyName.equals("LUPIAE") && crfBean.getName().equals("REGISTRATION [LUPIAE]")) || 
+                        			(currentStudyName.equals("T-Cell Project") && crfBean.getName().equals("BASELINE")) ||
+                        			(currentStudyName.equals("T-CELL Latin America") && crfBean.getName().equals("BASELINE"))
+                        		){  
                         		Boolean isWinner = false;
                         		
                             	// Get first available row from lottery table
@@ -2110,7 +2114,7 @@ public abstract class DataEntryServlet extends CoreSecureController {
                                         	// if LOSE=2 and WIN=0 then is WINNER
                                     		if (siteScore.get("L") == 2 && siteScore.get("W") == 0){
                                     			System.out.println(" *** Third registration WINNER ***");
-                                    			System.out.println("Updatng OUTCOME from '"+lcb.getOutcome()+"' to 'W' for lottery_id="+lcb.getLotteryId());
+                                    			System.out.println("Updating OUTCOME from '"+lcb.getOutcome()+"' to 'W' for lottery_id="+lcb.getLotteryId());
                                     			isWinner = true;
                                     			lcb.setOutcome("W");
                                     		}
